@@ -1,0 +1,111 @@
+# =========================
+# OS / Editor
+# =========================
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+.vscode/
+.idea/
+*.swp
+*.swo
+*.tmp
+*.bak
+*~
+
+# =========================
+# Env files / secrets
+# =========================
+.env
+.env.*
+!.env.example
+*.local
+
+# =========================
+# Logs
+# =========================
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# =========================
+# Node / Frontend (Vite/React/TS)
+# =========================
+node_modules/
+frontend/node_modules/
+
+dist/
+frontend/dist/
+build/
+frontend/build/
+
+# Vite / tooling caches
+.vite/
+frontend/.vite/
+.cache/
+frontend/.cache/
+.eslintcache
+
+# TypeScript build info
+*.tsbuildinfo
+
+# =========================
+# Python / Backend
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Virtual environments
+.venv/
+venv/
+env/
+backend/.venv/
+backend/venv/
+
+# Python build / packaging
+*.egg-info/
+.eggs/
+build/
+dist/
+pip-wheel-metadata/
+
+# Test / coverage
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Django / FastAPI runtime artifacts
+*.sqlite3
+*.db
+*.pid
+
+# =========================
+# Docker
+# =========================
+docker-compose.override.yml
+*.tar
+*.tgz
+
+# =========================
+# Local data / uploads (ajusta según tu backend)
+# =========================
+media/
+uploads/
+backend/media/
+backend/uploads/
+
+# =========================
+# Misc
+# =========================
+*.zip
+*.7z
+*.rar
