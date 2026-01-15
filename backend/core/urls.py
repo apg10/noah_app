@@ -1,6 +1,7 @@
 # core/urls.py
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+from . import views
 
 from .views import (
     RestaurantViewSet,
@@ -37,4 +38,6 @@ router.register(r"events", EventViewSet, basename="event")
 urlpatterns = [
     path("", include(router.urls)),
     path("kpi/sales-summary/", SalesSummaryView.as_view(), name="sales-summary"),
+    path("healthz", views.healthz, name="healthz"),
+    path("readyz", views.readyz, name="readyz"),
 ]

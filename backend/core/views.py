@@ -1,6 +1,9 @@
 # core/views.py
 from django.db.models import Sum, Count
 from django.utils import timezone
+from django.http import JsonResponse
+from django.db import connections
+from django.db.utils import OperationalError
 
 from rest_framework import viewsets, permissions, status
 from rest_framework.views import APIView
@@ -241,3 +244,27 @@ class SalesSummaryView(APIView):
         }
 
         return Response(data)
+    
+
+
+def healthz(request):
+    """
+    Liveness probe:
+    - Si el proceso responde, está 'vivo'.
+    - No valida DB para evitar reinicios innecesarios por fallas temporales de DB.
+    """
+    return JsonResponse({"status": "ok"}, status=200)
+
+def readyz(request):
+    """
+    Readiness probe:
+    - Debe confirmar que la app está lista para recibir tráfico.
+    - Aquí validamos conectividad a la DB.
+    """
+    try:
+        conn = connections["default"]
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT 1;")
+        return JsonResponse({"status": "ready", "db": "ok"}, status=200)
+    except OperationalError:
+        return JsonResponse({"status": "not-ready", "db": "down"}, status=503)
