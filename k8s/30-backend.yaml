@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: noah-backend
+  namespace: noah-dev
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: noah-backend
+  template:
+    metadata:
+      labels:
+        app: noah-backend
+    spec:
+      containers:
+        - name: backend
+          image: noah-backend:dev
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: noah-backend-config
+            - secretRef:
+                name: noah-backend-secret
+          command: ["sh", "-c"]
+          args:
+            - >
+              python manage.py migrate &&
+              python manage.py collectstatic --noinput &&
+              gunicorn noah_food.asgi:application -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --workers 2
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: noah-backend-svc
+  namespace: noah-dev
+spec:
+  selector:
+    app: noah-backend
+  ports:
+    - port: 8000
+      targetPort: 8000

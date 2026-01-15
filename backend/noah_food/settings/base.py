@@ -2,28 +2,43 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+# base.py está en: backend/noah_food/settings/base.py
+# Queremos BASE_DIR apuntando a: backend/
+BASE_DIR = Path(__file__).resolve().parents[2]
 
-# Carga variables desde backend/.env (solo en local/dev; en K8s vendrán por env directo)
-load_dotenv(BASE_DIR / ".env")
+# Carga .env solo si existe (local/dev). En K8s se inyecta por env directo.
+env_path = BASE_DIR / ".env"
+if env_path.exists():
+    load_dotenv(env_path)
 
 
 def env_bool(name: str, default: bool = False) -> bool:
     val = os.getenv(name)
     if val is None:
         return default
-    return val.strip() in ("1", "true", "True", "yes", "YES")
+    return val.strip().lower() in ("1", "true", "yes", "y", "on")
 
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "insecure-dev-key-change-me")
+def env_list(name: str, default: str = "") -> list[str]:
+    raw = os.getenv(name, default)
+    return [x.strip() for x in raw.split(",") if x.strip()]
 
-# SECURITY WARNING: don't run with debug turned on in production!
+
+# =========================
+# Core
+# =========================
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "unsafe-dev-key")
 DEBUG = env_bool("DJANGO_DEBUG", False)
 
 allowed_hosts_raw = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
-ALLOWED_HOSTS = [h.strip() for h in allowed_hosts_raw.split(",") if h.strip()]
+if allowed_hosts_raw.strip() == "*":
+    ALLOWED_HOSTS = ["*"]
+else:
+    ALLOWED_HOSTS = [h.strip() for h in allowed_hosts_raw.split(",") if h.strip()]
 
+# =========================
+# Apps
+# =========================
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -40,9 +55,11 @@ INSTALLED_APPS = [
     "core.apps.CoreConfig",
 ]
 
+# =========================
+# Middleware
+# =========================
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    # WhiteNoise para servir static (admin) fácilmente en contenedor
     "whitenoise.middleware.WhiteNoiseMiddleware",
 
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -53,6 +70,9 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+# =========================
+# URLs / Templates / Apps
+# =========================
 ROOT_URLCONF = "noah_food.urls"
 
 TEMPLATES = [
@@ -73,30 +93,38 @@ TEMPLATES = [
 ASGI_APPLICATION = "noah_food.asgi.application"
 WSGI_APPLICATION = "noah_food.wsgi.application"
 
+# =========================
+# Channels / Redis
+# =========================
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")
-REDIS_PORT = os.getenv("REDIS_PORT", "6379")
+REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
 
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [(REDIS_HOST, int(REDIS_PORT))],
-        },
+        "CONFIG": {"hosts": [(REDIS_HOST, REDIS_PORT)]},
     }
 }
 
-# Database: Postgres por variables de entorno
+# =========================
+# Database (Postgres)
+# Nota: en tu cluster el Service se llama "postgres"
+# =========================
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.getenv("POSTGRES_DB", "noah"),
         "USER": os.getenv("POSTGRES_USER", "noah"),
         "PASSWORD": os.getenv("POSTGRES_PASSWORD", "noahpass"),
-        "HOST": os.getenv("POSTGRES_HOST", "db"),
+        "HOST": os.getenv("POSTGRES_HOST", "postgres"),
         "PORT": os.getenv("POSTGRES_PORT", "5432"),
+        "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "60")),
     }
 }
 
+# =========================
+# Auth validators
+# =========================
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -104,26 +132,34 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
+# =========================
+# i18n
+# =========================
 LANGUAGE_CODE = "es-co"
 TIME_ZONE = "America/Bogota"
 USE_I18N = True
 USE_TZ = True
 
+# =========================
+# Static files
+# =========================
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# WhiteNoise storage (mejor performance y caching)
+# Para prod va perfecto. En dev lo sobreescribes en dev.py para evitar errores de manifest.
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Seguridad base (activable por env cuando uses HTTPS)
-CSRF_TRUSTED_ORIGINS = [
-    o.strip() for o in os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",") if o.strip()
-]
+# =========================
+# Security toggles (por env)
+# =========================
+CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS", "")
 SECURE_SSL_REDIRECT = env_bool("DJANGO_SECURE_SSL_REDIRECT", False)
 SESSION_COOKIE_SECURE = env_bool("DJANGO_SESSION_COOKIE_SECURE", False)
 CSRF_COOKIE_SECURE = env_bool("DJANGO_CSRF_COOKIE_SECURE", False)
 
-# Si algún día estás detrás de reverse proxy (Ingress), esto se activa en prod:
-# SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+# Útil detrás de Ingress / reverse proxy (habilítalo en prod con env)
+if env_bool("DJANGO_USE_PROXY_HEADERS", False):
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    USE_X_FORWARDED_HOST = True

@@ -5,7 +5,7 @@ from django.urls import path
 
 os.environ.setdefault(
     "DJANGO_SETTINGS_MODULE",
-    os.getenv("DJANGO_SETTINGS_MODULE", "noah_food.settings"),
+    os.getenv("DJANGO_SETTINGS_MODULE", "noah_food.settings.dev"),
 )
 
 django_asgi_app = get_asgi_application()
