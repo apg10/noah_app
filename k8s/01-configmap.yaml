@@ -4,20 +4,27 @@ metadata:
   name: noah-backend-config
   namespace: noah-dev
 data:
+  # Django: usar settings de DEV en el namespace noah-dev
   DJANGO_SETTINGS_MODULE: "noah_food.settings.dev"
   DJANGO_DEBUG: "1"
   DJANGO_ALLOWED_HOSTS: "*"
 
+  # Security toggles (en dev se dejan apagados)
+  DJANGO_CSRF_TRUSTED_ORIGINS: "http://localhost,http://127.0.0.1"
+  DJANGO_SECURE_SSL_REDIRECT: "0"
+  DJANGO_SESSION_COOKIE_SECURE: "0"
+  DJANGO_CSRF_COOKIE_SECURE: "0"
+  DJANGO_USE_PROXY_HEADERS: "0"
+
+  # Redis / Channels (según base.py)
+  REDIS_HOST: "redis"
+  REDIS_PORT: "6379"
+
+  # Postgres (según base.py)
   POSTGRES_HOST: "postgres"
   POSTGRES_PORT: "5432"
   POSTGRES_DB: "noah"
   POSTGRES_USER: "noah"
 
-  REDIS_HOST: "redis"
-  REDIS_PORT: "6379"
-
-  # Si luego expones dominio/https:
-  DJANGO_CSRF_TRUSTED_ORIGINS: ""
-  DJANGO_SECURE_SSL_REDIRECT: "0"
-  DJANGO_SESSION_COOKIE_SECURE: "0"
-  DJANGO_CSRF_COOKIE_SECURE: "0"
+  # DB tuning
+  DB_CONN_MAX_AGE: "60"

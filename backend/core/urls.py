@@ -37,7 +37,5 @@ router.register(r"events", EventViewSet, basename="event")
 
 urlpatterns = [
     path("", include(router.urls)),
-    path("kpi/sales-summary/", SalesSummaryView.as_view(), name="sales-summary"),
-    path("healthz", views.healthz, name="healthz"),
-    path("readyz", views.readyz, name="readyz"),
+    path("kpi/sales-summary/", SalesSummaryView.as_view(), name="sales-summary"),    
 ]
