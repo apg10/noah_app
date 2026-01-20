@@ -12,6 +12,9 @@ spec:
     metadata:
       labels:
         app: noah-backend
+      annotations:
+        checksum/config: "0447dcfff6f95bfa5a69d8e145ecbdb8178e3d9597d18b6bbc90f3075962a3d6"
+        checksum/secret: "e29ee104696acd566985548fe5f9c3c8084f317b7cc4da20ae98e044ace5dec2"
     spec:
       containers:
         - name: backend
