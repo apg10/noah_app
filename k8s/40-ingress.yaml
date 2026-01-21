@@ -1,22 +1,33 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: noah-backend-ingress
+  name: noah-ingress
   namespace: noah-dev
   annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: "/$2"
     nginx.ingress.kubernetes.io/proxy-body-size: "20m"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
 spec:
   ingressClassName: nginx
   rules:
-    - host: 
-      http:
+    - http:
         paths:
-          - path: /
-            pathType: Prefix
+          # /api/<algo> -> backend, quitando /api
+          - path: /api(/|$)(.*)
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: noah-backend-svc
                 port:
                   number: 8000
+
+          # Todo lo demás -> frontend
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: noah-frontend-svc
+                port:
+                  number: 80

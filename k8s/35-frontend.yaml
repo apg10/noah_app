@@ -1,0 +1,84 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: noah-frontend-nginx-conf
+  namespace: noah-dev
+data:
+  default.conf: |
+    server {
+      listen 80;
+      server_name _;
+
+      root /usr/share/nginx/html;
+      index index.html;
+
+      # SPA fallback (React Router)
+      location / {
+        try_files $uri $uri/ /index.html;
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: noah-frontend
+  namespace: noah-dev
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: noah-frontend
+  template:
+    metadata:
+      labels:
+        app: noah-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: noah-frontend:dev
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: nginx-conf
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
+      volumes:
+        - name: nginx-conf
+          configMap:
+            name: noah-frontend-nginx-conf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: noah-frontend-svc
+  namespace: noah-dev
+spec:
+  selector:
+    app: noah-frontend
+  ports:
+    - port: 80
+      targetPort: 80
