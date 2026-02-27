@@ -4,6 +4,9 @@ from rest_framework.routers import DefaultRouter
 from . import views
 
 from .views import (
+    AuthLoginView,
+    AuthLogoutView,
+    AuthMeView,
     RestaurantViewSet,
     DeliveryZoneViewSet,
     CustomerViewSet,
@@ -36,6 +39,9 @@ router.register(r"deliveries", DeliveryViewSet, basename="delivery")
 router.register(r"events", EventViewSet, basename="event")
 
 urlpatterns = [
+    path("auth/login/", AuthLoginView.as_view(), name="auth-login"),
+    path("auth/logout/", AuthLogoutView.as_view(), name="auth-logout"),
+    path("auth/me/", AuthMeView.as_view(), name="auth-me"),
     path("", include(router.urls)),
     path("kpi/sales-summary/", SalesSummaryView.as_view(), name="sales-summary"),    
 ]

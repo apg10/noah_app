@@ -280,3 +280,26 @@ class EventSerializer(serializers.ModelSerializer):
         model = Event
         fields = "__all__"
 
+
+class AuthLoginSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=150)
+    password = serializers.CharField(write_only=True, trim_whitespace=False)
+
+
+class AuthUserSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    username = serializers.CharField(read_only=True)
+    email = serializers.EmailField(read_only=True)
+    is_staff = serializers.BooleanField(read_only=True)
+    is_superuser = serializers.BooleanField(read_only=True)
+    customer_id = serializers.SerializerMethodField()
+    customer_name = serializers.SerializerMethodField()
+
+    def get_customer_id(self, obj):
+        customer = getattr(obj, "customer_profile", None)
+        return customer.id if customer else None
+
+    def get_customer_name(self, obj):
+        customer = getattr(obj, "customer_profile", None)
+        return customer.name if customer else ""
+

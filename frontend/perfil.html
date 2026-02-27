@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<title>Noah Food - Mi Perfil</title>
+<link href="./styles.css" rel="stylesheet"/>
+<script src="./tailwind-config.js"></script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased">
+  <div class="relative flex min-h-screen flex-col overflow-x-hidden max-w-md mx-auto border-x border-slate-200 dark:border-primary/10">
+    <!-- Header -->
+    <header class="sticky top-0 z-50 flex items-center bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md p-4 justify-between border-b border-slate-200 dark:border-primary/10">
+      <div class="flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-primary/10 transition-colors">
+        <span class="material-symbols-outlined text-slate-900 dark:text-slate-100">arrow_back</span>
+      </div>
+      <h2 class="text-lg font-bold leading-tight tracking-tight flex-1 text-center">Mi Perfil</h2>
+      <div class="flex w-10 items-center justify-end">
+        <button class="flex size-10 items-center justify-center rounded-full hover:bg-primary/10 transition-colors">
+          <span class="material-symbols-outlined text-slate-900 dark:text-slate-100">settings</span>
+        </button>
+      </div>
+    </header>
+    <!-- User Info Section -->
+    <section class="flex p-6 @container">
+      <div class="flex w-full flex-col gap-6 items-center">
+        <div class="flex gap-4 flex-col items-center">
+          <div class="relative">
+            <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-32 w-32 ring-4 ring-primary/20 shadow-xl" data-alt="Modern minimalist portrait of a young man profile" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCxDHR2Lg-b1MKWKmiEe6Cg4KPMlSZ7NAxHInuLk6IAoRqdaeOiBDmUVSBXPlixcO8xkbdEf-m6qHHOHczg_GOLWQLNOzAYjJh78lU8xptkZDf_xo7dT2Mjj_eHLxZKz49FeS3A2ua6zvVdJo0T03Ykx5IVaUHtJ_dhUt1LjSmw4z7oZMpL9wnTNQvL5OJfb6QOzfRab5eH_EP70pPGVgsYpmzILerbf7s-kMU7XPWfLVty8-XG7kkmcZwv6JV4yLQ1URVEBtsCxr0");'>
+            </div>
+            <div class="absolute bottom-1 right-1 bg-primary text-background-dark p-1.5 rounded-full flex items-center justify-center border-4 border-background-dark">
+              <span class="material-symbols-outlined text-[16px] font-bold">edit</span>
+            </div>
+          </div>
+          <div class="flex flex-col items-center justify-center">
+            <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Noah Foodie</h1>
+            <p class="text-slate-500 dark:text-primary/70 text-base font-medium">noah.food@example.com</p>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- Order History Section -->
+    <div class="px-4 pb-3 pt-4 flex items-center justify-between">
+      <h2 class="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Historial de Pedidos</h2>
+      <span class="text-sm font-medium text-primary cursor-pointer hover:underline">Ver todo</span>
+    </div>
+    <div class="flex flex-col gap-4 p-4 mb-24">
+      <!-- Order Item 1 -->
+      <div class="flex flex-col gap-4 rounded-xl bg-slate-100 dark:bg-primary/5 p-4 border border-slate-200 dark:border-primary/10 transition-all active:scale-[0.98]">
+        <div class="flex justify-between items-start">
+          <div class="flex flex-col gap-1">
+            <div class="flex items-center gap-2">
+              <span class="text-primary font-bold text-sm tracking-wide">ENTREGADO</span>
+              <span class="text-slate-400 dark:text-slate-500 text-xs">•</span>
+              <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">12 Oct, 2023</p>
+            </div>
+            <p class="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight">Pedido #1234 - La Hamburguesería</p>
+            <p class="text-slate-600 dark:text-slate-400 text-sm">2 Items • <span class="text-slate-900 dark:text-slate-100 font-semibold">COP $45.000</span></p>
+          </div>
+          <div class="h-14 w-14 bg-center bg-no-repeat bg-cover rounded-lg shrink-0 shadow-md" data-alt="Juicy gourmet burger with fresh ingredients" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAEBgI9GMciucqhCtrS0VAiHZ6dqssCldx6H6rfPNJEfoKcMQRm37BZjVgnEFl_EXk2coKIsuEdf-Rob4PXXitaQZaNty3MO5N43ZZViaFgqHy8vptgbF7BQjhzcDS8KgQnxZ6yWG1PZc28fxb7yiQnxKgGW8BmGC15Ue50NVnerpN81vtsW7vs7csFDXP1GcNNLB_a_WkynVaASSQLLHdHaSD70Ku_qvWmTRh_bZ3ppFPpc02SQu1v2YEhBmYbh-TobB8DB_Rytdw");'></div>
+        </div>
+        <div class="flex gap-2">
+          <button class="flex flex-1 items-center justify-center gap-2 rounded-lg h-10 bg-primary text-background-dark text-sm font-bold shadow-lg shadow-primary/10">
+            <span class="material-symbols-outlined text-[18px]">replay</span>
+            Repetir pedido
+          </button>
+          <button class="flex items-center justify-center px-4 rounded-lg h-10 bg-slate-200 dark:bg-primary/10 text-slate-900 dark:text-slate-100 text-sm font-bold">
+            Ayuda
+          </button>
+        </div>
+      </div>
+      <!-- Order Item 2 -->
+      <div class="flex flex-col gap-4 rounded-xl bg-slate-100 dark:bg-primary/5 p-4 border border-slate-200 dark:border-primary/10">
+        <div class="flex justify-between items-start">
+          <div class="flex flex-col gap-1">
+            <div class="flex items-center gap-2">
+              <span class="text-primary font-bold text-sm tracking-wide">ENTREGADO</span>
+              <span class="text-slate-400 dark:text-slate-500 text-xs">•</span>
+              <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">08 Oct, 2023</p>
+            </div>
+            <p class="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight">Pedido #1198 - Sushi Garden</p>
+            <p class="text-slate-600 dark:text-slate-400 text-sm">3 Items • <span class="text-slate-900 dark:text-slate-100 font-semibold">COP $68.200</span></p>
+          </div>
+          <div class="h-14 w-14 bg-center bg-no-repeat bg-cover rounded-lg shrink-0 shadow-md" data-alt="Fresh assorted sushi platter on plate" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCndkMqMJiw-pPy31-YwwBS_blrZhb427_CWa9fRZ3DnNz55PkwAuSz9cocNC9BBaqSGUCVOcY759T77Pp8Dj6o0k5EK07WGdVXxi7WSX4uLL4Q4zbtIv9SZ1R-kP9lLPQf-Y_tJw8oWOJhVIz8BAgtXPtpCYiqkc3_DvQ2KTQ9W3Yj7qr-S-IvGA-8cIJzH9MFx3X_LuxyTuRkHTl5dhMBNQFWro_Li7cpdv8YLdCo-ZFJDx7fO4KkdDIfn2OgYAUEaqTbvzZkFxM");'></div>
+        </div>
+        <div class="flex gap-2">
+          <button class="flex flex-1 items-center justify-center gap-2 rounded-lg h-10 bg-primary text-background-dark text-sm font-bold shadow-lg shadow-primary/10">
+            <span class="material-symbols-outlined text-[18px]">replay</span>
+            Repetir pedido
+          </button>
+          <button class="flex items-center justify-center px-4 rounded-lg h-10 bg-slate-200 dark:bg-primary/10 text-slate-900 dark:text-slate-100 text-sm font-bold">
+            Ayuda
+          </button>
+        </div>
+      </div>
+      <!-- Order Item 3 (Cancelled Example) -->
+      <div class="flex flex-col gap-4 rounded-xl bg-slate-100 dark:bg-primary/5 p-4 border border-slate-200 dark:border-primary/10 opacity-70">
+        <div class="flex justify-between items-start">
+          <div class="flex flex-col gap-1">
+            <div class="flex items-center gap-2">
+              <span class="text-rose-500 font-bold text-sm tracking-wide">CANCELADO</span>
+              <span class="text-slate-400 dark:text-slate-500 text-xs">•</span>
+              <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">02 Oct, 2023</p>
+            </div>
+            <p class="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight">Pedido #1052 - Pizza Napoli</p>
+            <p class="text-slate-600 dark:text-slate-400 text-sm">1 Item • <span class="text-slate-900 dark:text-slate-100 font-semibold">COP $32.000</span></p>
+          </div>
+          <div class="h-14 w-14 bg-center bg-no-repeat bg-cover rounded-lg shrink-0 shadow-md grayscale" data-alt="Traditional wood-fired italian cheese pizza" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD6qg6Pm5bylPQ2g_8c5ZTIc06lvG4qGhNJM1dLHC111qOEje2gENd4jadaRKSgeCZP9ONUYKP4eJNV4dzESEqafg6svreivDWbvG3BZmVAAKGql6POXpC-Kl-tTc-XAmwGwo5ip1ODUKGDJaZBzeqQ6KAVy484lkSBbMgNEUw-_-NK4xPwRkmKq2eeYN2xOpE2XMN2j9VQxs6yywDIqRiuFCuaAANQKQQJCtTohlERNVjUPxK2XOn_iR3bMREIXgTYPRIEioBItao");'></div>
+        </div>
+        <button class="flex items-center justify-center w-full rounded-lg h-10 bg-slate-200 dark:bg-primary/10 text-slate-900 dark:text-slate-100 text-sm font-bold">
+          Ver detalles del reembolso
+        </button>
+      </div>
+    </div>
+    <!-- Bottom Tab Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around bg-background-light dark:bg-[#1c2a15] px-4 pb-6 pt-3 border-t border-slate-200 dark:border-primary/10 max-w-md mx-auto">
+      <a class="flex flex-col items-center justify-center gap-1 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors" href="./index.html">
+        <span class="material-symbols-outlined">home</span>
+        <p class="text-[10px] font-bold uppercase tracking-widest">Inicio</p>
+      </a>
+      <a class="flex flex-col items-center justify-center gap-1 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors" href="./menu.html">
+        <span class="material-symbols-outlined">search</span>
+        <p class="text-[10px] font-bold uppercase tracking-widest">Explorar</p>
+      </a>
+      <a class="flex flex-col items-center justify-center gap-1 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors" href="./estado.html">
+        <span class="material-symbols-outlined">receipt_long</span>
+        <p class="text-[10px] font-bold uppercase tracking-widest">Pedidos</p>
+      </a>
+      <a class="flex flex-col items-center justify-center gap-1 text-primary" href="./perfil.html">
+        <span class="material-symbols-outlined font-fill">person</span>
+        <p class="text-[10px] font-bold uppercase tracking-widest">Perfil</p>
+        <div class="h-1 w-1 bg-primary rounded-full"></div>
+      </a>
+    </nav>
+  </div>
+  <script src="./app.js" defer></script>
+</body>
+</html>
+

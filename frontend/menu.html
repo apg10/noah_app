@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="./styles.css" rel="stylesheet"/>
+<script src="./tailwind-config.js"></script>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
+  <!-- Header & Search -->
+  <header class="sticky top-0 z-20 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md px-4 pt-6 pb-2">
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-primary text-3xl">restaurant_menu</span>
+        <h1 class="text-xl font-bold tracking-tight">Noah Food</h1>
+      </div>
+      <button class="relative p-2 rounded-full bg-slate-200 dark:bg-primary/10">
+        <span class="material-symbols-outlined">shopping_cart</span>
+        <span class="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-background-dark">2</span>
+      </button>
+    </div>
+    <div class="relative group">
+      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <span class="material-symbols-outlined text-slate-400 group-focus-within:text-primary transition-colors">search</span>
+      </div>
+      <input class="block w-full pl-10 pr-4 py-3 bg-slate-100 dark:bg-primary/5 border-none rounded-xl focus:ring-2 focus:ring-primary text-sm placeholder-slate-500" placeholder="Buscar platos o bebidas..." type="text"/>
+    </div>
+  </header>
+  <!-- Categories -->
+  <nav class="px-4 py-4 flex gap-3 overflow-x-auto no-scrollbar">
+    <button class="flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-primary px-5">
+      <span class="text-background-dark text-sm font-bold leading-normal">Hamburguesas</span>
+    </button>
+    <button class="flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-slate-200 dark:bg-primary/10 px-5 border border-transparent hover:border-primary/30">
+      <p class="text-slate-700 dark:text-slate-300 text-sm font-medium leading-normal">Pizzas</p>
+    </button>
+    <button class="flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-slate-200 dark:bg-primary/10 px-5 border border-transparent hover:border-primary/30">
+      <p class="text-slate-700 dark:text-slate-300 text-sm font-medium leading-normal">Entradas</p>
+    </button>
+    <button class="flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-slate-200 dark:bg-primary/10 px-5 border border-transparent hover:border-primary/30">
+      <p class="text-slate-700 dark:text-slate-300 text-sm font-medium leading-normal">Bebidas</p>
+    </button>
+  </nav>
+  <!-- Product Grid -->
+  <main class="flex-1 px-4 pb-32">
+    <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+      Nuestra Carta
+      <span class="h-1 w-1 rounded-full bg-primary"></span>
+    </h2>
+    <div class="grid grid-cols-2 gap-4">
+      <!-- Product Card 1 -->
+      <div class="bg-white dark:bg-primary/5 rounded-xl overflow-hidden border border-slate-100 dark:border-primary/10 shadow-sm flex flex-col">
+        <div class="aspect-square bg-slate-200 dark:bg-primary/20 relative">
+          <img alt="Delicious double cheeseburger with sesame bun" class="w-full h-full object-cover" data-alt="Juicy double cheeseburger with fresh vegetables" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXI_OIXR8Tqnw-6ikQXaWZE24jKRIEpQrnye6OjI7bfBO1juqZkhCKM2JpA--EpU_lsoFbo-WpSoGod-oaHedfYzAMDvBuzRoODc2voqm6NHWoiJ_MwX5wQQPLfXYbhflQg08F2nwoK6bKEaIMCjA4HVabm7yJTVOeCoaO6QV72ogM5iycvY3Tz1khJFEzfJt-Qa7wLwp2VWeeFfEJbsBjuFu9BBRetBzkXzXBJ_g1K3dUYHXsiQ0iVLFJvAxe2aUtaPnkWgU6fyg"/>
+        </div>
+        <div class="p-3 flex flex-col flex-1">
+          <h3 class="font-bold text-sm mb-1 line-clamp-1">Noah Clásica</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 flex-1 mb-2">Res, queso cheddar, lechuga, tomate y salsa secreta.</p>
+          <div class="flex items-center justify-between mt-auto pt-2">
+            <span class="font-bold text-primary">$28.900</span>
+            <button class="bg-primary text-background-dark p-1.5 rounded-lg flex items-center justify-center">
+              <span class="material-symbols-outlined text-base">add</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- Product Card 2 -->
+      <div class="bg-white dark:bg-primary/5 rounded-xl overflow-hidden border border-slate-100 dark:border-primary/10 shadow-sm flex flex-col">
+        <div class="aspect-square bg-slate-200 dark:bg-primary/20 relative">
+          <img alt="Gourmet bacon burger" class="w-full h-full object-cover" data-alt="Premium bacon burger with melted cheese" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBRyopdVcKnEpCpAz_BJs8lzcmuohcwGcX34O-qJCj3EvM0NPNnYnqSIGEDoAZ2mVcdjdLrV4X9nzA-jZSqGqMnoH6Jk_crg1O6Eu_bSqExlSjK1Dykf0wVHgIty2Jy1DyudImJlQkitM0hw1ItJNKjUIq0MS52K2_NIksW2JwKqkusHyRpPD6ei25nETBvxR6LhyHjYoa8vKLHLNcErT_TV_QbJmHdADSCaAfXAm8BBhnWPZHYyyBci2jwOH6AIAqSr2lUsVLS4fw"/>
+        </div>
+        <div class="p-3 flex flex-col flex-1">
+          <h3 class="font-bold text-sm mb-1 line-clamp-1">Bacon BBQ</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 flex-1 mb-2">Tocineta crocante, aros de cebolla y salsa BBQ.</p>
+          <div class="flex items-center justify-between mt-auto pt-2">
+            <span class="font-bold text-primary">$32.500</span>
+            <button class="bg-primary text-background-dark p-1.5 rounded-lg flex items-center justify-center">
+              <span class="material-symbols-outlined text-base">add</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- Product Card 3 -->
+      <div class="bg-white dark:bg-primary/5 rounded-xl overflow-hidden border border-slate-100 dark:border-primary/10 shadow-sm flex flex-col">
+        <div class="aspect-square bg-slate-200 dark:bg-primary/20 relative">
+          <img alt="Spicy chicken burger" class="w-full h-full object-cover" data-alt="Crispy spicy chicken burger with pickles" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAqGkVdXvDs03_k3YpK-O89PES4kun4kZ33a9YufrgJXFHFHZYeRuxyH7AqPOqQVeC0hpzo4rs2iMr2bFQeLKksetw12J0sh-19a2NXdXZT2fBVf4nlIdauC_6_pZS7sd979saR0oJ-Mpehp5WCZnRGPLWmtPKe46IDZlObOLPTkeSWI_7NmAjTpMugDOqWve7IU7x6NXTLb84226YSHrjmHNg-3PmEAxgws20cWba9OyUlqVn0kkuHH2YE4ourBXNFOM5L8uYjric"/>
+        </div>
+        <div class="p-3 flex flex-col flex-1">
+          <h3 class="font-bold text-sm mb-1 line-clamp-1">Noah Chicken</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 flex-1 mb-2">Pollo apanado, pepinillos y mayonesa spicy.</p>
+          <div class="flex items-center justify-between mt-auto pt-2">
+            <span class="font-bold text-primary">$26.000</span>
+            <button class="bg-primary text-background-dark p-1.5 rounded-lg flex items-center justify-center">
+              <span class="material-symbols-outlined text-base">add</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- Product Card 4 -->
+      <div class="bg-white dark:bg-primary/5 rounded-xl overflow-hidden border border-slate-100 dark:border-primary/10 shadow-sm flex flex-col">
+        <div class="aspect-square bg-slate-200 dark:bg-primary/20 relative">
+          <img alt="Special truffle burger" class="w-full h-full object-cover" data-alt="Gourmet truffle burger with mushrooms" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUzUznqqihxU_7vrPHjGPGu5qCfpEfXaKks_lQeuHGFIFWG3wGYPfTb3N5c_5hDw9GzrBR8P2ExLmKuKWdTNCqT6ccgdXuqFamYIqQoaQF--SUQzEixIvsb6wRPKXUnBAeo2WKgtaojtKMQjtDABLi3QzAFvlLpBPTwfcdx091xxJy3233BG-bqzFpleOVEbb03K3j-nVTfc6UI6BFxWP42iuR2UutQbFuiwP7AJRImhsRkDIvZbVW_xHOBDPZGipLzKIlSQO7oxI"/>
+        </div>
+        <div class="p-3 flex flex-col flex-1">
+          <h3 class="font-bold text-sm mb-1 line-clamp-1">Truffle Deluxe</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 flex-1 mb-2">Aceite de trufa, champiñones y queso brie.</p>
+          <div class="flex items-center justify-between mt-auto pt-2">
+            <span class="font-bold text-primary">$38.900</span>
+            <button class="bg-primary text-background-dark p-1.5 rounded-lg flex items-center justify-center">
+              <span class="material-symbols-outlined text-base">add</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <!-- Bottom Navigation Bar -->
+  <nav class="fixed bottom-0 left-0 right-0 z-50 bg-background-light dark:bg-background-dark border-t border-slate-200 dark:border-primary/10 px-4 pb-6 pt-2 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+    <div class="flex justify-between items-center max-w-md mx-auto">
+      <a class="flex flex-col items-center gap-1 text-slate-400" href="./index.html">
+        <span class="material-symbols-outlined">home</span>
+        <span class="text-[10px] font-medium">Inicio</span>
+      </a>
+      <a class="flex flex-col items-center gap-1 text-primary" href="./menu.html">
+        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">widgets</span>
+        <span class="text-[10px] font-bold">Menú</span>
+      </a>
+      <a class="flex flex-col items-center gap-1 text-slate-400" href="./estado.html">
+        <span class="material-symbols-outlined">receipt_long</span>
+        <span class="text-[10px] font-medium">Pedidos</span>
+      </a>
+      <a class="flex flex-col items-center gap-1 text-slate-400" href="./perfil.html">
+        <span class="material-symbols-outlined">person</span>
+        <span class="text-[10px] font-medium">Perfil</span>
+      </a>
+    </div>
+  </nav>
+  <script src="./app.js" defer></script>
+</body>
+</html>
+

@@ -5,6 +5,7 @@ from rest_framework.test import APIClient
 
 from .models import Customer, DeliveryAddress, MenuItem, Order, Restaurant, Coupon
 from .serializers import OrderCreateSerializer
+from rest_framework.authtoken.models import Token
 
 
 User = get_user_model()
@@ -54,6 +55,62 @@ class OrderCreateSerializerTests(TestCase):
 
         self.assertFalse(serializer.is_valid())
         self.assertIn("items", serializer.errors)
+
+
+class AuthApiTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(
+            username="login_user",
+            password="Pass1234!",
+            email="login_user@example.com",
+        )
+        self.customer = Customer.objects.create(
+            user=self.user,
+            phone="3001111111",
+            name="Login User",
+        )
+
+    def test_login_returns_token_and_user_payload(self):
+        response = self.client.post(
+            reverse("auth-login"),
+            {"username": "login_user", "password": "Pass1234!"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("token", response.data)
+        self.assertEqual(response.data["user"]["username"], "login_user")
+        self.assertEqual(response.data["user"]["customer_id"], self.customer.id)
+
+    def test_login_rejects_invalid_credentials(self):
+        response = self.client.post(
+            reverse("auth-login"),
+            {"username": "login_user", "password": "bad-pass"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("detail", response.data)
+
+    def test_me_requires_valid_token(self):
+        token = Token.objects.create(user=self.user)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")
+
+        response = self.client.get(reverse("auth-me"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["user"]["id"], self.user.id)
+        self.assertEqual(response.data["user"]["customer_id"], self.customer.id)
+
+    def test_logout_revokes_token(self):
+        token = Token.objects.create(user=self.user)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")
+
+        response = self.client.post(reverse("auth-logout"), {}, format="json")
+
+        self.assertEqual(response.status_code, 204)
+        self.assertFalse(Token.objects.filter(key=token.key).exists())
 
 
 class OrderViewPermissionTests(TestCase):

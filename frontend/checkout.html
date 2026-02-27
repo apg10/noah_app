@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="./styles.css" rel="stylesheet"/>
+<script src="./tailwind-config.js"></script>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen font-display">
+  <div class="relative flex h-auto min-h-screen w-full max-w-md mx-auto flex-col bg-background-light dark:bg-background-dark overflow-x-hidden border-x border-slate-200 dark:border-primary/10">
+    <!-- TopAppBar -->
+    <div class="sticky top-0 z-50 flex items-center bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md p-4 pb-2 justify-between">
+      <div class="text-slate-900 dark:text-slate-100 flex size-12 shrink-0 items-center justify-start cursor-pointer">
+        <span class="material-symbols-outlined">arrow_back</span>
+      </div>
+      <h2 class="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-12">Checkout</h2>
+    </div>
+    <!-- Toggle Domicilio/Recoger -->
+    <div class="flex px-4 py-3">
+      <div class="flex h-12 flex-1 items-center justify-center rounded-xl bg-slate-200 dark:bg-primary/10 p-1.5">
+        <label class="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-lg px-2 has-[:checked]:bg-white dark:has-[:checked]:bg-background-dark has-[:checked]:shadow-sm has-[:checked]:text-primary text-slate-500 dark:text-slate-400 text-sm font-semibold transition-all">
+          <span class="truncate">Domicilio</span>
+          <input checked="" class="invisible w-0" name="delivery_type" type="radio" value="Domicilio"/>
+        </label>
+        <label class="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-lg px-2 has-[:checked]:bg-white dark:has-[:checked]:bg-background-dark has-[:checked]:shadow-sm has-[:checked]:text-primary text-slate-500 dark:text-slate-400 text-sm font-semibold transition-all">
+          <span class="truncate">Recoger</span>
+          <input class="invisible w-0" name="delivery_type" type="radio" value="Recoger"/>
+        </label>
+      </div>
+    </div>
+    <!-- Form Sections -->
+    <div class="flex flex-col gap-1">
+      <h3 class="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">Información de entrega</h3>
+      <div class="px-4 py-2">
+        <label class="flex flex-col w-full">
+          <p class="text-slate-700 dark:text-slate-300 text-sm font-medium leading-normal pb-2">Nombre</p>
+          <input class="form-input flex w-full rounded-xl text-slate-900 dark:text-slate-100 focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-slate-200 dark:border-primary/20 bg-white dark:bg-primary/5 h-14 placeholder:text-slate-400 dark:placeholder:text-slate-500 p-4 text-base font-normal" placeholder="Tu nombre completo" value="Noah Smith"/>
+        </label>
+      </div>
+      <div class="px-4 py-2">
+        <label class="flex flex-col w-full">
+          <p class="text-slate-700 dark:text-slate-300 text-sm font-medium leading-normal pb-2">Teléfono</p>
+          <input class="form-input flex w-full rounded-xl text-slate-900 dark:text-slate-100 focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-slate-200 dark:border-primary/20 bg-white dark:bg-primary/5 h-14 placeholder:text-slate-400 dark:placeholder:text-slate-500 p-4 text-base font-normal" placeholder="+57 300 000 0000" type="tel"/>
+        </label>
+      </div>
+      <div class="px-4 py-2">
+        <label class="flex flex-col w-full">
+          <p class="text-slate-700 dark:text-slate-300 text-sm font-medium leading-normal pb-2">Dirección de entrega</p>
+          <div class="relative">
+            <input class="form-input flex w-full rounded-xl text-slate-900 dark:text-slate-100 focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-slate-200 dark:border-primary/20 bg-white dark:bg-primary/5 h-14 placeholder:text-slate-400 dark:placeholder:text-slate-500 pl-4 pr-12 text-base font-normal" placeholder="Calle, número, apartamento..." type="text"/>
+            <span class="material-symbols-outlined absolute right-4 top-4 text-primary">location_on</span>
+          </div>
+        </label>
+      </div>
+      <div class="px-4 py-2">
+        <label class="flex flex-col w-full">
+          <p class="text-slate-700 dark:text-slate-300 text-sm font-medium leading-normal pb-2">Notas adicionales</p>
+          <textarea class="form-textarea flex w-full rounded-xl text-slate-900 dark:text-slate-100 focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-slate-200 dark:border-primary/20 bg-white dark:bg-primary/5 h-24 placeholder:text-slate-400 dark:placeholder:text-slate-500 p-4 text-base font-normal resize-none" placeholder="Ej: Portería, sin cebolla, etc..."></textarea>
+        </label>
+      </div>
+    </div>
+    <!-- Payment Method -->
+    <div class="px-4 py-6">
+      <h3 class="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight tracking-[-0.015em] pb-4">Método de pago</h3>
+      <div class="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-primary/20 bg-white dark:bg-primary/5 cursor-pointer">
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined text-primary">payments</span>
+          <span class="text-slate-900 dark:text-slate-100 font-medium">Efectivo al recibir</span>
+        </div>
+        <span class="material-symbols-outlined text-slate-400">chevron_right</span>
+      </div>
+    </div>
+    <!-- Order Summary -->
+    <div class="px-4 py-4 mb-32">
+      <h3 class="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight tracking-[-0.015em] pb-4">Resumen del pedido</h3>
+      <div class="flex flex-col gap-3">
+        <div class="flex justify-between items-center">
+          <span class="text-slate-500 dark:text-slate-400">1x Double Cheeseburger</span>
+          <span class="text-slate-900 dark:text-slate-100 font-medium">$12.50</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-slate-500 dark:text-slate-400">1x Papas Medianas</span>
+          <span class="text-slate-900 dark:text-slate-100 font-medium">$4.00</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-slate-500 dark:text-slate-400">Costo de envío</span>
+          <span class="text-slate-900 dark:text-slate-100 font-medium">$2.00</span>
+        </div>
+        <div class="h-px bg-slate-200 dark:bg-primary/20 my-2"></div>
+        <div class="flex justify-between items-center">
+          <span class="text-slate-900 dark:text-slate-100 font-bold">Total</span>
+          <span class="text-primary text-xl font-bold">$18.50</span>
+        </div>
+      </div>
+    </div>
+    <!-- Sticky Footer CTA -->
+    <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto p-4 bg-background-light dark:bg-background-dark border-t border-slate-200 dark:border-primary/10">
+      <button class="w-full h-14 bg-primary text-background-dark font-bold text-lg rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-transform">
+        Confirmar pedido
+        <span class="material-symbols-outlined">shopping_bag</span>
+      </button>
+    </div>
+  </div>
+  <script src="./app.js" defer></script>
+</body>
+</html>
+

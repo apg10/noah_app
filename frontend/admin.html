@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Noah Admin Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="./styles.css" rel="stylesheet"/>
+<script src="./tailwind-config.js"></script>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
+  <!-- Top Navigation -->
+  <header class="sticky top-0 z-50 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-primary/10 px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="bg-primary p-1.5 rounded-lg">
+        <span class="material-symbols-outlined text-background-dark font-bold">restaurant</span>
+      </div>
+      <h1 class="text-lg font-bold tracking-tight">Noah Admin</h1>
+    </div>
+    <div class="flex items-center gap-4">
+      <button class="relative p-1">
+        <span class="material-symbols-outlined text-slate-600 dark:text-slate-400">notifications</span>
+        <span class="absolute top-0 right-0 w-2 h-2 bg-primary rounded-full border-2 border-background-dark"></span>
+      </button>
+      <div class="w-8 h-8 rounded-full bg-primary/20 border border-primary/30 overflow-hidden">
+        <img class="w-full h-full object-cover" data-alt="Profile picture of the administrator" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC10Sd3dguAijby1A0jt6QLUgbD_mZWZKFaiexPF43_Mnm9jMyJjPHPSqPIPuT-nAc05e4ktlcUzHsgHl8Wp4PWZJWknpXe38o6Nj7RqgpczpryfT-HkwRyQ18W8MDlQpkSSATqyRjABR9X0dnhyERlmaq7z1ke5EI3uIz7QvAis-UR56qu9manWL0m3yHiHvNXPx3WdDkyslSNu9ikqkKQB6RJrifTDVNJUJI2ytW4Agk9dBnEij18_AnTHcdjgTEASkqP8Zo12u8"/>
+      </div>
+    </div>
+  </header>
+  <main class="flex-1 pb-24">
+    <!-- KPI Section -->
+    <section class="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/10 rounded-xl p-5">
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Pedidos del día</p>
+          <span class="material-symbols-outlined text-primary text-xl">shopping_cart</span>
+        </div>
+        <div class="flex items-end justify-between">
+          <p class="text-2xl font-bold">142</p>
+          <p class="text-primary text-xs font-semibold bg-primary/10 px-2 py-0.5 rounded-full">+12%</p>
+        </div>
+      </div>
+      <div class="bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/10 rounded-xl p-5">
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Ingresos (COP)</p>
+          <span class="material-symbols-outlined text-primary text-xl">payments</span>
+        </div>
+        <div class="flex items-end justify-between">
+          <p class="text-2xl font-bold">$2.450k</p>
+          <p class="text-primary text-xs font-semibold bg-primary/10 px-2 py-0.5 rounded-full">+8%</p>
+        </div>
+      </div>
+      <div class="bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/10 rounded-xl p-5">
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Ticket Promedio</p>
+          <span class="material-symbols-outlined text-primary text-xl">receipt_long</span>
+        </div>
+        <div class="flex items-end justify-between">
+          <p class="text-2xl font-bold">$17.2k</p>
+          <p class="text-red-400 text-xs font-semibold bg-red-400/10 px-2 py-0.5 rounded-full">-3%</p>
+        </div>
+      </div>
+    </section>
+    <!-- Chart Section -->
+    <section class="px-4 py-2">
+      <div class="bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/10 rounded-xl p-5">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h2 class="text-base font-bold">Ventas Semanales</h2>
+            <p class="text-slate-500 dark:text-slate-400 text-xs mt-1">Comparativa últimos 7 días</p>
+          </div>
+          <select class="bg-transparent border-slate-200 dark:border-primary/20 text-xs rounded-lg dark:text-slate-300">
+            <option>Esta semana</option>
+            <option>Mes pasado</option>
+          </select>
+        </div>
+        <div class="h-40 w-full relative">
+          <svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 400 100">
+            <defs>
+              <lineargradient id="chartGradient" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stop-color="#59f20d" stop-opacity="0.3"></stop>
+                <stop offset="100%" stop-color="#59f20d" stop-opacity="0"></stop>
+              </lineargradient>
+            </defs>
+            <path d="M0,80 Q50,20 100,50 T200,30 T300,70 T400,10 L400,100 L0,100 Z" fill="url(#chartGradient)"></path>
+            <path d="M0,80 Q50,20 100,50 T200,30 T300,70 T400,10" fill="none" stroke="#59f20d" stroke-linecap="round" stroke-width="3"></path>
+          </svg>
+        </div>
+        <div class="flex justify-between mt-4 px-1">
+          <span class="text-[10px] font-medium text-slate-400">Lun</span>
+          <span class="text-[10px] font-medium text-slate-400">Mar</span>
+          <span class="text-[10px] font-medium text-slate-400">Mie</span>
+          <span class="text-[10px] font-medium text-slate-400">Jue</span>
+          <span class="text-[10px] font-medium text-slate-400">Vie</span>
+          <span class="text-[10px] font-medium text-slate-400">Sab</span>
+          <span class="text-[10px] font-medium text-slate-400">Dom</span>
+        </div>
+      </div>
+    </section>
+    <!-- Recent Orders -->
+    <section class="p-4">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold">Pedidos Recientes</h2>
+        <button class="text-primary text-sm font-semibold">Ver todos</button>
+      </div>
+      <div class="space-y-3">
+        <!-- Order Item -->
+        <div class="bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/10 rounded-xl p-4 flex items-center gap-4">
+          <div class="w-12 h-12 rounded-lg bg-slate-100 dark:bg-primary/10 flex items-center justify-center">
+            <span class="material-symbols-outlined text-slate-600 dark:text-primary">lunch_dining</span>
+          </div>
+          <div class="flex-1">
+            <div class="flex justify-between">
+              <h3 class="font-semibold text-sm">#ORD-2841</h3>
+              <span class="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded">En cocina</span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">2x Combo Noah Burger + Soda</p>
+            <div class="flex justify-between items-center mt-2">
+              <span class="text-xs text-slate-400">Hace 4 min</span>
+              <span class="font-bold text-sm">$42.500</span>
+            </div>
+          </div>
+        </div>
+        <!-- Order Item -->
+        <div class="bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/10 rounded-xl p-4 flex items-center gap-4">
+          <div class="w-12 h-12 rounded-lg bg-slate-100 dark:bg-primary/10 flex items-center justify-center">
+            <span class="material-symbols-outlined text-slate-600 dark:text-primary">local_pizza</span>
+          </div>
+          <div class="flex-1">
+            <div class="flex justify-between">
+              <h3 class="font-semibold text-sm">#ORD-2840</h3>
+              <span class="text-xs font-medium text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded">Pendiente</span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">1x Pizza Familiar Pepperoni</p>
+            <div class="flex justify-between items-center mt-2">
+              <span class="text-xs text-slate-400">Hace 12 min</span>
+              <span class="font-bold text-sm">$38.000</span>
+            </div>
+          </div>
+        </div>
+        <!-- Order Item -->
+        <div class="bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/10 rounded-xl p-4 flex items-center gap-4 opacity-70">
+          <div class="w-12 h-12 rounded-lg bg-slate-100 dark:bg-primary/10 flex items-center justify-center">
+            <span class="material-symbols-outlined text-slate-600 dark:text-primary">icecream</span>
+          </div>
+          <div class="flex-1">
+            <div class="flex justify-between">
+              <h3 class="font-semibold text-sm">#ORD-2839</h3>
+              <span class="text-xs font-medium text-slate-400 bg-slate-400/10 px-2 py-0.5 rounded">Entregado</span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">3x Helado Artesanal</p>
+            <div class="flex justify-between items-center mt-2">
+              <span class="text-xs text-slate-400">Hace 28 min</span>
+              <span class="font-bold text-sm">$15.600</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <!-- Bottom Navigation Bar -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-background-dark/90 backdrop-blur-lg border-t border-slate-200 dark:border-primary/10 px-4 pb-6 pt-3 z-50">
+    <div class="flex justify-around items-center max-w-md mx-auto">
+      <a class="flex flex-col items-center gap-1 text-primary" href="./admin.html">
+        <span class="material-symbols-outlined filled-icon">dashboard</span>
+        <span class="text-[10px] font-bold">Dashboard</span>
+      </a>
+      <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="./estado.html">
+        <span class="material-symbols-outlined">shopping_bag</span>
+        <span class="text-[10px] font-medium">Pedidos</span>
+      </a>
+      <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="./menu.html">
+        <span class="material-symbols-outlined">restaurant_menu</span>
+        <span class="text-[10px] font-medium">Menú</span>
+      </a>
+      <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="./perfil.html">
+        <span class="material-symbols-outlined">group</span>
+        <span class="text-[10px] font-medium">Personal</span>
+      </a>
+      <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="./admin.html">
+        <span class="material-symbols-outlined">settings</span>
+        <span class="text-[10px] font-medium">Ajustes</span>
+      </a>
+    </div>
+  </nav>
+  <script src="./app.js" defer></script>
+</body>
+</html>
+

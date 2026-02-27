@@ -4,11 +4,13 @@ from django.utils import timezone
 from django.http import JsonResponse
 from django.db import connections
 from django.db.utils import OperationalError
+from django.contrib.auth import authenticate, logout as django_logout
 
 from rest_framework import viewsets, permissions, status
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.authtoken.models import Token
 
 from .models import (
     Restaurant,
@@ -40,6 +42,8 @@ from .serializers import (
     OrderItemSerializer,
     EventSerializer,
     OrderCreateSerializer,
+    AuthLoginSerializer,
+    AuthUserSerializer,
 )
 
 
@@ -54,6 +58,53 @@ class IsAdminOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
         return bool(request.user and request.user.is_staff)
+
+
+class AuthLoginView(APIView):
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = []
+
+    def post(self, request, *args, **kwargs):
+        serializer = AuthLoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        username = serializer.validated_data["username"]
+        password = serializer.validated_data["password"]
+
+        user = authenticate(request=request, username=username, password=password)
+        if user is None:
+            return Response(
+                {"detail": "Usuario o contraseña inválidos."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not user.is_active:
+            return Response(
+                {"detail": "La cuenta está inactiva."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        token, _ = Token.objects.get_or_create(user=user)
+        return Response(
+            {"token": token.key, "user": AuthUserSerializer(user).data},
+            status=status.HTTP_200_OK,
+        )
+
+
+class AuthMeView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        return Response({"user": AuthUserSerializer(request.user).data}, status=status.HTTP_200_OK)
+
+
+class AuthLogoutView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        Token.objects.filter(user=request.user).delete()
+        django_logout(request)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 # --------- VIEWSETS PRINCIPALES --------- #
