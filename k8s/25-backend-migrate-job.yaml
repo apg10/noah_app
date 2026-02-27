@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: noah-backend-migrate
+  namespace: noah-dev
+spec:
+  backoffLimit: 6
+  ttlSecondsAfterFinished: 600
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: backend-migrate
+          image: __BACKEND_IMAGE__
+          command: ["sh", "-c"]
+          args:
+            - >
+              set -e;
+              migrated=0;
+              for i in 1 2 3 4 5 6 7 8 9 10; do
+                python manage.py migrate --noinput && migrated=1 && break;
+                echo "migrate intento ${i} fallo, reintentando en 3s...";
+                sleep 3;
+              done;
+              [ "$migrated" -eq 1 ];
+          envFrom:
+            - configMapRef:
+                name: noah-backend-config
+            - secretRef:
+                name: noah-backend-secret
