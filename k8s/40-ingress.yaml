@@ -4,8 +4,6 @@ metadata:
   name: noah-ingress
   namespace: noah-dev
   annotations:
-    nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: "/$2"
     nginx.ingress.kubernetes.io/proxy-body-size: "20m"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
@@ -14,16 +12,30 @@ spec:
   rules:
     - http:
         paths:
-          # /api/<algo> -> backend, quitando /api
-          - path: /api(/|$)(.*)
-            pathType: ImplementationSpecific
+          # API backend sin rewrite: preserva /api/*
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: noah-backend-svc
+                port:
+                  number: 8000
+          - path: /healthz/
+            pathType: Prefix
+            backend:
+              service:
+                name: noah-backend-svc
+                port:
+                  number: 8000
+          - path: /readyz/
+            pathType: Prefix
             backend:
               service:
                 name: noah-backend-svc
                 port:
                   number: 8000
 
-          # Todo lo demás -> frontend
+          # Todo lo demas -> frontend
           - path: /
             pathType: Prefix
             backend:

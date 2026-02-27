@@ -6,6 +6,7 @@ from django.db import connections
 from django.db.utils import OperationalError
 
 from rest_framework import viewsets, permissions, status
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
@@ -73,15 +74,70 @@ class CustomerViewSet(viewsets.ModelViewSet):
     """
     Clientes que compran en Noah (nombre, teléfono, etc.).
     """
-    queryset = Customer.objects.all().order_by("-id")
+    queryset = Customer.objects.select_related("user").all().order_by("-id")
     serializer_class = CustomerSerializer
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if self.request.user.is_staff:
+            return qs
+        return qs.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        if self.request.user.is_staff:
+            serializer.save()
+            return
+
+        if Customer.objects.filter(user=self.request.user).exists():
+            raise ValidationError("El usuario autenticado ya tiene un perfil de cliente.")
+        serializer.save(user=self.request.user)
+
+    def perform_update(self, serializer):
+        instance = self.get_object()
+        if not self.request.user.is_staff and instance.user_id != self.request.user.id:
+            raise PermissionDenied("No puedes modificar un perfil de cliente ajeno.")
+
+        if self.request.user.is_staff:
+            serializer.save()
+        else:
+            serializer.save(user=self.request.user)
 
 
 class DeliveryAddressViewSet(viewsets.ModelViewSet):
-    queryset = DeliveryAddress.objects.all().order_by("-id")
+    queryset = DeliveryAddress.objects.select_related("customer", "customer__user").all().order_by("-id")
     serializer_class = DeliveryAddressSerializer
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if self.request.user.is_staff:
+            return qs
+        return qs.filter(customer__user=self.request.user)
+
+    def _validate_owned_customer(self, serializer, fallback_customer=None):
+        customer = serializer.validated_data.get("customer", fallback_customer)
+        if customer is None:
+            raise ValidationError({"customer": "El campo customer es obligatorio."})
+        if customer.user_id != self.request.user.id:
+            raise PermissionDenied("No puedes usar un customer de otro usuario.")
+
+    def perform_create(self, serializer):
+        if self.request.user.is_staff:
+            serializer.save()
+            return
+        self._validate_owned_customer(serializer)
+        serializer.save()
+
+    def perform_update(self, serializer):
+        if self.request.user.is_staff:
+            serializer.save()
+            return
+        self._validate_owned_customer(
+            serializer,
+            fallback_customer=self.get_object().customer,
+        )
+        serializer.save()
 
 
 class MenuCategoryViewSet(viewsets.ModelViewSet):
@@ -125,13 +181,15 @@ class OrderViewSet(viewsets.ModelViewSet):
     Pedidos (lo usa cocina, conductores y admin).
     """
     queryset = Order.objects.select_related(
-        "restaurant", "customer", "delivery_address", "coupon"
+        "restaurant", "customer", "customer__user", "delivery_address", "coupon"
     ).prefetch_related("items__menu_item")
     serializer_class = OrderSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         qs = super().get_queryset()
+        if not self.request.user.is_staff:
+            qs = qs.filter(customer__user=self.request.user)
 
         status_param = self.request.query_params.get("status")
         if status_param:
@@ -147,26 +205,113 @@ class OrderViewSet(viewsets.ModelViewSet):
         """
         Usa OrderCreateSerializer para crear pedido + líneas en un solo POST.
         """
-        serializer = OrderCreateSerializer(data=request.data)
+        payload = request.data.copy()
+
+        if not request.user.is_staff:
+            customer = getattr(request.user, "customer_profile", None)
+            if customer is None:
+                raise ValidationError(
+                    {"customer": "Debes crear tu perfil de cliente antes de crear pedidos."}
+                )
+
+            payload["customer"] = customer.id
+            delivery_address_id = payload.get("delivery_address")
+            if delivery_address_id and not DeliveryAddress.objects.filter(
+                pk=delivery_address_id,
+                customer_id=customer.id,
+            ).exists():
+                raise ValidationError(
+                    {"delivery_address": "La direccion no pertenece al usuario autenticado."}
+                )
+
+        serializer = OrderCreateSerializer(data=payload)
         serializer.is_valid(raise_exception=True)
         order = serializer.save()
         output_serializer = OrderSerializer(order)
         return Response(output_serializer.data, status=status.HTTP_201_CREATED)
 
+    def _ensure_staff_for_write(self):
+        if not self.request.user.is_staff:
+            raise PermissionDenied("Solo staff puede modificar o eliminar pedidos.")
+
+    def update(self, request, *args, **kwargs):
+        self._ensure_staff_for_write()
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        self._ensure_staff_for_write()
+        return super().partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        self._ensure_staff_for_write()
+        return super().destroy(request, *args, **kwargs)
+
 
 class OrderItemViewSet(viewsets.ModelViewSet):
-    queryset = OrderItem.objects.all().order_by("-id")
+    queryset = OrderItem.objects.select_related("order", "order__customer", "order__customer__user").all().order_by("-id")
     serializer_class = OrderItemSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if self.request.user.is_staff:
+            return qs
+        return qs.filter(order__customer__user=self.request.user)
+
+    def _ensure_staff_for_write(self):
+        if not self.request.user.is_staff:
+            raise PermissionDenied("Solo staff puede crear o modificar lineas de pedido.")
+
+    def create(self, request, *args, **kwargs):
+        self._ensure_staff_for_write()
+        return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        self._ensure_staff_for_write()
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        self._ensure_staff_for_write()
+        return super().partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        self._ensure_staff_for_write()
+        return super().destroy(request, *args, **kwargs)
 
 
 class DeliveryViewSet(viewsets.ModelViewSet):
     """
     Entregas realizadas por los conductores.
     """
-    queryset = Delivery.objects.select_related("order", "driver").order_by("-id")
+    queryset = Delivery.objects.select_related("order", "order__customer", "order__customer__user", "driver").order_by("-id")
     serializer_class = DeliverySerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if self.request.user.is_staff:
+            return qs
+        return qs.filter(order__customer__user=self.request.user)
+
+    def _ensure_staff_for_write(self):
+        if not self.request.user.is_staff:
+            raise PermissionDenied("Solo staff puede crear o modificar entregas.")
+
+    def create(self, request, *args, **kwargs):
+        self._ensure_staff_for_write()
+        return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        self._ensure_staff_for_write()
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        self._ensure_staff_for_write()
+        return super().partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        self._ensure_staff_for_write()
+        return super().destroy(request, *args, **kwargs)
 
 
 class EventViewSet(viewsets.ModelViewSet):
@@ -216,7 +361,8 @@ class SalesSummaryView(APIView):
         )
 
         top_items_qs = (
-            OrderItem.objects.values("menu_item_id", "menu_item__name")
+            OrderItem.objects.filter(order__status=Order.STATUS_COMPLETED)
+            .values("menu_item_id", "menu_item__name")
             .annotate(
                 total_qty=Sum("quantity"),
                 total_revenue=Sum("line_total_cop"),

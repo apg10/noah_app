@@ -4,7 +4,10 @@ channels_redis==4.3.0
 click==8.3.1
 colorama==0.4.6
 Django==6.0
+django-stubs==5.2.9
+django-stubs-ext==5.2.9
 djangorestframework==3.16.1
+djangorestframework-stubs==3.16.8
 gunicorn==23.0.0
 h11==0.16.0
 msgpack==1.1.2
@@ -15,6 +18,8 @@ psycopg-binary==3.3.2
 python-dotenv==1.2.1
 redis==7.1.0
 sqlparse==0.5.4
+types-PyYAML==6.0.12.20250915
+typing_extensions==4.15.0
 tzdata==2025.2
 uvicorn==0.40.0
 whitenoise==6.11.0

@@ -30,12 +30,26 @@ spec:
           command: ["sh", "-c"]
           args:
             - >
-              python manage.py migrate &&
-              python manage.py collectstatic --noinput &&
-              gunicorn noah_food.asgi:application -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --workers 2
+              set -e;
+              migrated=0;
+              for i in 1 2 3 4 5 6 7 8 9 10; do
+                python manage.py migrate --noinput && migrated=1 && break;
+                echo "migrate intento ${i} fallo, reintentando en 3s...";
+                sleep 3;
+              done;
+              [ "$migrated" -eq 1 ];
+              python manage.py collectstatic --noinput;
+              exec gunicorn noah_food.asgi:application -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --workers 2
+          startupProbe:
+            httpGet:
+              path: /healthz/
+              port: 8000
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 30
           livenessProbe:
             httpGet:
-              path: /healthz
+              path: /healthz/
               port: 8000
             initialDelaySeconds: 15
             periodSeconds: 10
@@ -43,7 +57,7 @@ spec:
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /readyz
+              path: /readyz/
               port: 8000
             initialDelaySeconds: 10
             periodSeconds: 5

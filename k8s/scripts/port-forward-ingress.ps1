@@ -1,5 +1,5 @@
 # k8s/scripts/port-forward-ingress.ps1
-# Port-forward del Ingress NGINX controller a localhost:8080
+# Port-forward del Ingress NGINX controller a localhost:18080
 # Uso: .\k8s\scripts\port-forward-ingress.ps1
 
 $ErrorActionPreference = "Stop"
@@ -11,7 +11,7 @@ $RemotePort = 80
 
 Write-Host "==> Verificando Ingress Controller ($Namespace/$ServiceName)..."
 
-# Verifica que el service exista
+# Verifica que el service exista.
 kubectl get svc $ServiceName -n $Namespace | Out-Null
 
 Write-Host "=> Iniciando port-forward: localhost:${LocalPort} -> ${ServiceName}:${RemotePort}"

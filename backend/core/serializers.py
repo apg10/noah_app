@@ -157,7 +157,66 @@ class OrderCreateSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         items = attrs.get("items", [])
         if not items:
-            raise serializers.ValidationError("Debes enviar al menos un ítem en la orden.")
+            raise serializers.ValidationError("Debes enviar al menos un item en la orden.")
+
+        restaurant = attrs.get("restaurant")
+        customer = attrs.get("customer")
+        delivery_address = attrs.get("delivery_address")
+        coupon = attrs.get("coupon")
+
+        if delivery_address and not customer:
+            raise serializers.ValidationError(
+                {"customer": "Debes enviar customer si envias una delivery_address."}
+            )
+
+        if delivery_address and customer and delivery_address.customer_id != customer.id:
+            raise serializers.ValidationError(
+                {"delivery_address": "La direccion no pertenece al customer enviado."}
+            )
+
+        menu_item_ids = [item["menu_item_id"] for item in items]
+        seen = set()
+        duplicates = set()
+        for menu_item_id in menu_item_ids:
+            if menu_item_id in seen:
+                duplicates.add(menu_item_id)
+            seen.add(menu_item_id)
+
+        if duplicates:
+            repeated = ", ".join(str(x) for x in sorted(duplicates))
+            raise serializers.ValidationError(
+                {"items": f"menu_item_id repetido en la orden: {repeated}."}
+            )
+
+        menu_items = MenuItem.objects.filter(
+            id__in=menu_item_ids,
+            restaurant=restaurant,
+            is_active=True,
+        )
+        menu_items_by_id = {item.id: item for item in menu_items}
+        missing_ids = sorted(set(menu_item_ids) - set(menu_items_by_id.keys()))
+        if missing_ids:
+            raise serializers.ValidationError(
+                {
+                    "items": (
+                        "Los siguientes menu_item_id no existen, no pertenecen al "
+                        f"restaurante o estan inactivos: {missing_ids}."
+                    )
+                }
+            )
+
+        if coupon:
+            if coupon.restaurant_id != restaurant.id:
+                raise serializers.ValidationError(
+                    {"coupon": "El cupon no pertenece al restaurante seleccionado."}
+                )
+            if not coupon.is_usable:
+                raise serializers.ValidationError(
+                    {"coupon": "El cupon no esta disponible para uso."}
+                )
+
+        # Cacheamos para no repetir consultas en create().
+        attrs["_menu_items_by_id"] = menu_items_by_id
         return attrs
 
     def create(self, validated_data):
@@ -165,16 +224,16 @@ class OrderCreateSerializer(serializers.ModelSerializer):
         from datetime import timedelta
 
         items_data = validated_data.pop("items")
+        menu_items_by_id = validated_data.pop("_menu_items_by_id", {})
         restaurant = validated_data["restaurant"]
 
         with transaction.atomic():
             subtotal = 0
             max_prep_minutes = 0
 
-            # Creamos la orden “vacía” para luego asociar items
             order = Order.objects.create(
                 **validated_data,
-                subtotal_cop=0,          # se actualiza más abajo
+                subtotal_cop=0,
                 delivery_fee_cop=restaurant.delivery_fee_base_cop,
             )
 
@@ -183,7 +242,11 @@ class OrderCreateSerializer(serializers.ModelSerializer):
                 quantity = item_data["quantity"]
                 notes = item_data.get("notes", "")
 
-                menu_item = MenuItem.objects.get(pk=menu_item_id)
+                menu_item = menu_items_by_id.get(menu_item_id)
+                if menu_item is None:
+                    raise serializers.ValidationError(
+                        {"items": f"menu_item_id invalido para este restaurante: {menu_item_id}."}
+                    )
 
                 unit_price = menu_item.price_cop
                 line_total = unit_price * quantity
@@ -212,8 +275,8 @@ class OrderCreateSerializer(serializers.ModelSerializer):
 
         return order
 
-
 class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = "__all__"
+

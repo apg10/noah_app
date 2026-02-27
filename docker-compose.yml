@@ -9,11 +9,21 @@ services:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U noah -d noah"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
 
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
 
   web:
     build:
@@ -21,14 +31,22 @@ services:
     env_file:
       - ./backend/.env
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     ports:
       - "8000:8000"
     
     command: >
-      sh -c "python manage.py makemigrations &&
-             python manage.py migrate &&
+      sh -c "set -e;
+             migrated=0;
+             for i in 1 2 3 4 5 6 7 8 9 10; do
+               python manage.py migrate --noinput && migrated=1 && break;
+               echo \"migrate intento $${i} fallo, reintentando en 3s...\";
+               sleep 3;
+             done;
+             test \"$$migrated\" -eq 1 &&
              python manage.py collectstatic --noinput &&
              gunicorn noah_food.asgi:application -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --workers 2"
 
