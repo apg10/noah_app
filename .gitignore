@@ -102,6 +102,7 @@ media/
 uploads/
 backend/media/
 backend/uploads/
+k8s/backups/
 
 # =========================
 # Misc
