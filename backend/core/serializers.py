@@ -1,5 +1,8 @@
 # core/serializers.py
 from django.utils import timezone
+from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
+from django.db import transaction
 from rest_framework import serializers
 
 from .models import (
@@ -284,6 +287,59 @@ class EventSerializer(serializers.ModelSerializer):
 class AuthLoginSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150)
     password = serializers.CharField(write_only=True, trim_whitespace=False)
+
+
+class AuthRegisterSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=150)
+    email = serializers.EmailField(required=False, allow_blank=True)
+    name = serializers.CharField(max_length=150, required=False, allow_blank=True)
+    phone = serializers.CharField(max_length=30)
+    password = serializers.CharField(write_only=True, trim_whitespace=False)
+    password_confirm = serializers.CharField(write_only=True, trim_whitespace=False)
+
+    def validate_username(self, value):
+        User = get_user_model()
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError("El username ya está en uso.")
+        return value
+
+    def validate_phone(self, value):
+        if Customer.objects.filter(phone=value).exists():
+            raise serializers.ValidationError("El teléfono ya está registrado.")
+        return value
+
+    def validate(self, attrs):
+        password = attrs.get("password", "")
+        password_confirm = attrs.get("password_confirm", "")
+        if password != password_confirm:
+            raise serializers.ValidationError({"password_confirm": "Las contraseñas no coinciden."})
+        validate_password(password)
+        return attrs
+
+    def create(self, validated_data):
+        User = get_user_model()
+        password = validated_data.pop("password")
+        validated_data.pop("password_confirm", None)
+        username = validated_data.pop("username")
+        email = validated_data.get("email", "")
+        name = validated_data.get("name", "")
+        phone = validated_data["phone"]
+
+        with transaction.atomic():
+            user = User.objects.create_user(
+                username=username,
+                password=password,
+                email=email,
+            )
+            Customer.objects.create(
+                user=user,
+                name=name,
+                phone=phone,
+                email=email,
+                is_active=True,
+            )
+
+        return user
 
 
 class AuthUserSerializer(serializers.Serializer):

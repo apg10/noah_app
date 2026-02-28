@@ -43,6 +43,7 @@ from .serializers import (
     EventSerializer,
     OrderCreateSerializer,
     AuthLoginSerializer,
+    AuthRegisterSerializer,
     AuthUserSerializer,
 )
 
@@ -88,6 +89,21 @@ class AuthLoginView(APIView):
         return Response(
             {"token": token.key, "user": AuthUserSerializer(user).data},
             status=status.HTTP_200_OK,
+        )
+
+
+class AuthRegisterView(APIView):
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = []
+
+    def post(self, request, *args, **kwargs):
+        serializer = AuthRegisterSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        token, _ = Token.objects.get_or_create(user=user)
+        return Response(
+            {"token": token.key, "user": AuthUserSerializer(user).data},
+            status=status.HTTP_201_CREATED,
         )
 
 

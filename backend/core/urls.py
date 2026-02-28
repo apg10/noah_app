@@ -7,6 +7,7 @@ from .views import (
     AuthLoginView,
     AuthLogoutView,
     AuthMeView,
+    AuthRegisterView,
     RestaurantViewSet,
     DeliveryZoneViewSet,
     CustomerViewSet,
@@ -40,6 +41,7 @@ router.register(r"events", EventViewSet, basename="event")
 
 urlpatterns = [
     path("auth/login/", AuthLoginView.as_view(), name="auth-login"),
+    path("auth/register/", AuthRegisterView.as_view(), name="auth-register"),
     path("auth/logout/", AuthLogoutView.as_view(), name="auth-logout"),
     path("auth/me/", AuthMeView.as_view(), name="auth-me"),
     path("", include(router.urls)),

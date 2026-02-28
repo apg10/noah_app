@@ -1,129 +1,79 @@
 <!DOCTYPE html>
-
-<html class="dark" lang="en"><head>
+<html class="dark" lang="es">
+<head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Noah Food - Estado del pedido</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<title>Noah Food - Order Status</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&display=swap" rel="stylesheet"/>
 <link href="./styles.css" rel="stylesheet"/>
 <script src="./tailwind-config.js"></script>
 </head>
 <body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased">
   <div class="relative flex h-screen w-full max-w-md mx-auto flex-col bg-background-light dark:bg-background-dark overflow-hidden border-x border-slate-200 dark:border-slate-800">
     <header class="flex items-center bg-background-light dark:bg-background-dark p-4 pb-2 justify-between sticky top-0 z-10 border-b border-slate-200 dark:border-slate-800/50">
-      <button class="text-slate-900 dark:text-slate-100 flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
+      <button type="button" class="text-slate-900 dark:text-slate-100 flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
         <span class="material-symbols-outlined">arrow_back</span>
       </button>
-      <h2 class="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight tracking-tight flex-1 text-center pr-10">Order Status</h2>
+      <h2 class="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight tracking-tight flex-1 text-center pr-10">Estado del pedido</h2>
     </header>
+
     <main class="flex-1 overflow-y-auto no-scrollbar pb-24">
       <section class="px-4 py-6">
         <div class="flex justify-between items-start mb-4">
           <div>
-            <h3 class="text-slate-500 dark:text-slate-400 text-sm font-medium uppercase tracking-wider">Order ID</h3>
-            <p class="text-slate-900 dark:text-slate-100 text-2xl font-bold">#NOAH-8293</p>
+            <h3 class="text-slate-500 dark:text-slate-400 text-sm font-medium uppercase tracking-wider">Pedido</h3>
+            <p class="text-slate-900 dark:text-slate-100 text-2xl font-bold">Cargando...</p>
           </div>
           <div class="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-bold border border-primary/20">
-            IN PROGRESS
+            CARGANDO
           </div>
         </div>
         <div class="@container">
           <div class="flex flex-col items-stretch justify-start rounded-xl shadow-sm bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
-            <div class="w-full bg-center bg-no-repeat aspect-[16/7] bg-cover rounded-t-xl" data-alt="Hot delicious pepperoni pizza on a table" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA8Bca0Iv1kL3i3Gkgi8rFaKY11_fsrxBi5QqnkDO6A-bulAgdSfxspFOgZvFXYZwaotCD0szSX3oHwJRLgsz4_q1DLURo0fqzPGgOqVmLdO4uuTi7hEwIX8N4Ck_acRPumPlzkzeUUhgjYRMobqLDp0EuueTfMDNahFWrqIDV6cIhmB4UodlK9D-ELThFQz4BZ92kUc1fGBaoRFGj-dZkgQ1ehsK2nxgquPo-BE_3L-nmgT6VPkI-s6VibGifK9VqzEIEOjYBTs5E");'></div>
+            <div class="w-full aspect-[16/7] rounded-t-xl bg-slate-200 dark:bg-slate-800"></div>
             <div class="flex w-full grow flex-col items-stretch justify-center gap-1 p-4">
-              <p class="text-slate-900 dark:text-slate-100 text-lg font-bold">Delicious Pizza &amp; Soda</p>
+              <p class="text-slate-900 dark:text-slate-100 text-lg font-bold">Consultando tu pedido</p>
               <div class="flex items-center justify-between">
-                <p class="text-slate-500 dark:text-slate-400 text-sm">2 items • $24.50</p>
-                <button class="text-primary text-sm font-semibold flex items-center gap-1">
-                  View Details <span class="material-symbols-outlined text-sm">chevron_right</span>
-                </button>
+                <p class="text-slate-500 dark:text-slate-400 text-sm">Un momento por favor</p>
               </div>
             </div>
           </div>
         </div>
       </section>
+
       <section class="px-6 py-4">
-        <div class="relative">
-          <div class="grid grid-cols-[40px_1fr] gap-x-4">
-            <div class="flex flex-col items-center">
-              <div class="z-10 bg-primary text-background-dark rounded-full p-1 flex items-center justify-center">
-                <span class="material-symbols-outlined text-[20px] font-bold">check</span>
-              </div>
-              <div class="w-[2px] bg-primary h-12"></div>
-            </div>
-            <div class="pb-8">
-              <p class="text-slate-900 dark:text-slate-100 text-base font-bold">Nuevo</p>
-              <p class="text-slate-500 dark:text-slate-400 text-sm">10:30 AM • We've received your order</p>
-            </div>
-            <div class="flex flex-col items-center">
-              <div class="z-10 bg-primary text-background-dark rounded-full p-1 flex items-center justify-center">
-                <span class="material-symbols-outlined text-[20px] font-bold">check</span>
-              </div>
-              <div class="w-[2px] bg-primary h-12"></div>
-            </div>
-            <div class="pb-8">
-              <p class="text-slate-900 dark:text-slate-100 text-base font-bold">Preparación</p>
-              <p class="text-slate-500 dark:text-slate-400 text-sm">10:45 AM • Chef is crafting your meal</p>
-            </div>
-            <div class="flex flex-col items-center">
-              <div class="z-10 bg-primary rounded-full p-1 flex items-center justify-center ring-4 ring-primary/20 scale-110">
-                <span class="material-symbols-outlined text-[20px] text-background-dark font-bold">restaurant</span>
-              </div>
-              <div class="w-[2px] bg-slate-300 dark:bg-slate-700 h-12 dashed-line"></div>
-            </div>
-            <div class="pb-8">
-              <p class="text-primary text-base font-black uppercase tracking-tight">Listo</p>
-              <p class="text-slate-900 dark:text-slate-100 text-sm font-medium">Coming up! Food is being packed</p>
-            </div>
-            <div class="flex flex-col items-center">
-              <div class="z-10 bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 rounded-full p-1 flex items-center justify-center border-2 border-slate-300 dark:border-slate-700">
-                <span class="material-symbols-outlined text-[20px]">directions_bike</span>
-              </div>
-              <div class="w-[2px] bg-slate-300 dark:bg-slate-700 h-12"></div>
-            </div>
-            <div class="pb-8">
-              <p class="text-slate-400 dark:text-slate-600 text-base font-medium">En ruta</p>
-              <p class="text-slate-400 dark:text-slate-600 text-sm">Estimated 11:15 AM</p>
-            </div>
-            <div class="flex flex-col items-center">
-              <div class="z-10 bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 rounded-full p-1 flex items-center justify-center border-2 border-slate-300 dark:border-slate-700">
-                <span class="material-symbols-outlined text-[20px]">package_2</span>
-              </div>
-            </div>
-            <div class="pb-4">
-              <p class="text-slate-400 dark:text-slate-600 text-base font-medium">Entregado</p>
-              <p class="text-slate-400 dark:text-slate-600 text-sm">Pending delivery</p>
-            </div>
-          </div>
+        <div class="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-white dark:bg-slate-900/40 text-sm text-slate-500 dark:text-slate-400">
+          Cargando linea de tiempo...
         </div>
       </section>
+
       <section class="px-4 py-2">
-        <button class="w-full flex items-center justify-center gap-2 bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-slate-100 py-4 rounded-xl font-bold border border-slate-300 dark:border-slate-700 hover:bg-slate-300 dark:hover:bg-slate-700 transition-all">
+        <button type="button" class="w-full flex items-center justify-center gap-2 bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-slate-100 py-4 rounded-xl font-bold border border-slate-300 dark:border-slate-700 hover:bg-slate-300 dark:hover:bg-slate-700 transition-all">
           <span class="material-symbols-outlined">support_agent</span>
-          Need help with your order?
+          Necesitas ayuda con tu pedido?
         </button>
       </section>
     </main>
+
     <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto z-20 border-t border-slate-200 dark:border-slate-800 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md px-4 pb-6 pt-2">
       <div class="flex gap-2">
         <a class="flex flex-1 flex-col items-center justify-center gap-1 text-slate-400 dark:text-slate-500" href="./index.html">
           <span class="material-symbols-outlined">home</span>
-          <p class="text-[10px] font-bold uppercase tracking-wider">Home</p>
+          <p class="text-[10px] font-bold uppercase tracking-wider">Inicio</p>
         </a>
         <a class="flex flex-1 flex-col items-center justify-center gap-1 text-primary" href="./estado.html">
           <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">receipt_long</span>
-          <p class="text-[10px] font-bold uppercase tracking-wider">Orders</p>
+          <p class="text-[10px] font-bold uppercase tracking-wider">Pedidos</p>
         </a>
         <a class="flex flex-1 flex-col items-center justify-center gap-1 text-slate-400 dark:text-slate-500" href="./perfil.html">
           <span class="material-symbols-outlined">person</span>
-          <p class="text-[10px] font-bold uppercase tracking-wider">Profile</p>
+          <p class="text-[10px] font-bold uppercase tracking-wider">Perfil</p>
         </a>
-        <a class="flex flex-1 flex-col items-center justify-center gap-1 text-slate-400 dark:text-slate-500" href="./checkout.html">
-          <span class="material-symbols-outlined">help</span>
-          <p class="text-[10px] font-bold uppercase tracking-wider">Help</p>
+        <a class="flex flex-1 flex-col items-center justify-center gap-1 text-slate-400 dark:text-slate-500" href="./menu.html">
+          <span class="material-symbols-outlined">widgets</span>
+          <p class="text-[10px] font-bold uppercase tracking-wider">Menu</p>
         </a>
       </div>
     </nav>
@@ -131,4 +81,3 @@
   <script src="./app.js" defer></script>
 </body>
 </html>
-

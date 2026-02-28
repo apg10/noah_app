@@ -93,6 +93,37 @@ class AuthApiTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn("detail", response.data)
 
+    def test_register_creates_user_customer_and_returns_token(self):
+        payload = {
+            "username": "nuevo_user",
+            "email": "nuevo_user@example.com",
+            "name": "Nuevo User",
+            "phone": "3002222222",
+            "password": "Pass1234!",
+            "password_confirm": "Pass1234!",
+        }
+        response = self.client.post(reverse("auth-register"), payload, format="json")
+
+        self.assertEqual(response.status_code, 201)
+        self.assertIn("token", response.data)
+        self.assertEqual(response.data["user"]["username"], "nuevo_user")
+        self.assertIsNotNone(response.data["user"]["customer_id"])
+        self.assertTrue(User.objects.filter(username="nuevo_user").exists())
+        self.assertTrue(Customer.objects.filter(phone="3002222222").exists())
+
+    def test_register_rejects_password_mismatch(self):
+        payload = {
+            "username": "x_user",
+            "email": "x_user@example.com",
+            "name": "X User",
+            "phone": "3003333333",
+            "password": "Pass1234!",
+            "password_confirm": "Pass9999!",
+        }
+        response = self.client.post(reverse("auth-register"), payload, format="json")
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("password_confirm", response.data)
+
     def test_me_requires_valid_token(self):
         token = Token.objects.create(user=self.user)
         self.client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")

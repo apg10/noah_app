@@ -123,6 +123,7 @@
     listOrders: async () => arr(await req("/orders/")),
     getOrder: async (id) => req(`/orders/${id}/`),
     login: async (username, password) => req("/auth/login/", { method: "POST", body: { username, password } }),
+    register: async (payload) => req("/auth/register/", { method: "POST", body: payload }),
     me: async () => req("/auth/me/"),
     logout: async () => req("/auth/logout/", { method: "POST", body: {} })
   };
@@ -206,11 +207,63 @@
     return readCart().items.reduce((a, i) => a + i.quantity * i.price_cop, 0);
   }
 
+  function goToCart() {
+    location.href = "./carrito.html";
+  }
+
+  function getHeaderCartButton() {
+    const buttons = Array.from(document.querySelectorAll("header button"));
+    return buttons.find((btn) => {
+      const icon = btn.querySelector("span.material-symbols-outlined");
+      return (icon?.textContent || "").trim() === "shopping_cart";
+    }) || null;
+  }
+
+  function wireHeaderCartButton() {
+    const btn = getHeaderCartButton();
+    if (!btn || btn.dataset.cartWired === "1") return;
+    btn.dataset.cartWired = "1";
+    btn.type = "button";
+    btn.setAttribute("aria-label", "Ver carrito");
+    btn.addEventListener("click", goToCart);
+  }
+
+  function findBackTrigger(root) {
+    const scope = root || document;
+    const icon = Array.from(scope.querySelectorAll("span.material-symbols-outlined"))
+      .find((el) => (el.textContent || "").trim() === "arrow_back");
+    return icon ? icon.closest("button, a, div") : null;
+  }
+
+  function wireBackTrigger(trigger, fallbackHref, label) {
+    if (!trigger || trigger.dataset.backWired === "1") return;
+    trigger.dataset.backWired = "1";
+
+    if (trigger.tagName !== "BUTTON" && trigger.tagName !== "A") {
+      trigger.setAttribute("role", "button");
+      trigger.setAttribute("tabindex", "0");
+    }
+    if (label) trigger.setAttribute("aria-label", label);
+
+    const goBack = () => {
+      if (window.history.length > 1) window.history.back();
+      else location.href = fallbackHref;
+    };
+
+    trigger.addEventListener("click", goBack);
+    trigger.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter" || ev.key === " ") {
+        ev.preventDefault();
+        goBack();
+      }
+    });
+  }
+
   function updateBadges() {
     const count = cartCount();
     const badges = [
-      document.querySelector("a[href='./carrito.html'] span.absolute"),
-      document.querySelector("header button span.absolute")
+      ...Array.from(document.querySelectorAll("[data-cart-badge]")),
+      getHeaderCartButton()?.querySelector("span.absolute")
     ];
     badges.forEach((b) => {
       if (!b) return;
@@ -228,6 +281,71 @@
     container.innerHTML = `<div class="rounded-xl border ${error ? "border-rose-300 bg-rose-50 text-rose-700" : "border-slate-200 bg-slate-50 text-slate-700"} p-4 text-sm">${esc(text)}</div>`;
   }
 
+  function normalizeBottomNav() {
+    const customerPages = new Set([
+      "index.html",
+      "menu.html",
+      "carrito.html",
+      "detalle.html",
+      "checkout.html",
+      "estado.html",
+      "perfil.html"
+    ]);
+    if (!customerPages.has(PAGE)) return;
+
+    const nav = Array.from(document.querySelectorAll("nav")).find((el) => {
+      const links = el.querySelectorAll("a");
+      return links.length >= 4 && (el.className.includes("bottom") || el.className.includes("sticky"));
+    });
+    if (!nav) return;
+
+    const items = [
+      { key: "home", href: "./index.html", icon: "home", label: "Inicio" },
+      { key: "menu", href: "./menu.html", icon: "widgets", label: "Menu" },
+      { key: "cart", href: "./carrito.html", icon: "shopping_cart", label: "Carrito" },
+      { key: "orders", href: "./estado.html", icon: "receipt_long", label: "Pedidos" },
+      { key: "profile", href: "./perfil.html", icon: "person", label: "Perfil" }
+    ];
+
+    const activeByPage = {
+      "index.html": "home",
+      "menu.html": "menu",
+      "detalle.html": "menu",
+      "carrito.html": "cart",
+      "checkout.html": "cart",
+      "estado.html": "orders",
+      "perfil.html": "profile"
+    };
+    const active = activeByPage[PAGE] || "";
+
+    nav.className = "fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 dark:border-primary/10 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md";
+    nav.innerHTML = `
+      <div class="max-w-md mx-auto w-full grid grid-cols-5 gap-1 px-2 pt-2 pb-4">
+        ${items.map((item) => {
+          const isActive = item.key === active;
+          const tone = isActive
+            ? "text-primary"
+            : "text-slate-400 dark:text-slate-500 hover:text-primary transition-colors";
+          const dot = isActive ? '<span class="h-1 w-1 rounded-full bg-primary"></span>' : "";
+          const icon = `<span class="material-symbols-outlined text-[22px] leading-none" ${isActive ? "style=\"font-variation-settings: 'FILL' 1\"" : ""}>${item.icon}</span>`;
+          const badge = item.key === "cart"
+            ? '<span data-cart-badge class="absolute -top-1 -right-2 min-w-[15px] h-[15px] px-1 rounded-full bg-primary text-background-dark text-[9px] font-black hidden inline-flex items-center justify-center leading-none">0</span>'
+            : "";
+          return `
+            <a href="${item.href}" class="flex min-w-0 flex-col items-center justify-center gap-0.5 py-1 ${tone}">
+              <span class="relative inline-flex items-center justify-center leading-none">
+                ${icon}
+                ${badge}
+              </span>
+              <span class="truncate text-[9px] font-semibold uppercase tracking-[0.03em] leading-none">${item.label}</span>
+              ${dot}
+            </a>
+          `;
+        }).join("")}
+      </div>
+    `;
+  }
+
   function initIndex() {
     if (PAGE !== "index.html") return;
     const btn = Array.from(document.querySelectorAll("button")).find((b) => (b.textContent || "").toUpperCase().includes("VER MEN"));
@@ -239,6 +357,7 @@
     const navCats = document.querySelector("nav.px-4.py-4");
     const grid = document.querySelector("main .grid.grid-cols-2");
     const search = document.querySelector("input[placeholder*='Buscar']");
+    const pageMain = document.querySelector("main");
     if (!grid) return;
 
     grid.innerHTML = "<p class='col-span-2 text-sm text-slate-500'>Cargando menu...</p>";
@@ -248,6 +367,57 @@
     let active = "";
 
     const forcedRestaurant = pInt(localStorage.getItem(KEY.restaurant));
+    wireHeaderCartButton();
+
+    function ensureMenuQuickCheckout() {
+      const existing = document.getElementById("menu-cart-shortcut");
+      if (existing) return existing;
+
+      const wrapper = document.createElement("div");
+      wrapper.id = "menu-cart-shortcut";
+      wrapper.className = "fixed bottom-24 left-0 right-0 z-40 px-4 hidden";
+      wrapper.innerHTML = `
+        <div class="max-w-md mx-auto rounded-2xl border border-primary/30 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md shadow-lg shadow-black/20 px-4 py-3 flex items-center justify-between gap-3">
+          <div class="min-w-0">
+            <p data-menu-cart-meta class="text-xs text-slate-500 dark:text-slate-300 truncate"></p>
+            <p data-menu-cart-total class="text-sm font-bold text-primary truncate"></p>
+          </div>
+          <button type="button" data-menu-go-cart class="shrink-0 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-background-dark hover:brightness-110 active:scale-[0.98] transition">Ir a pagar</button>
+        </div>
+      `;
+      document.body.appendChild(wrapper);
+      wrapper.querySelector("button[data-menu-go-cart]")?.addEventListener("click", goToCart);
+      return wrapper;
+    }
+
+    function renderMenuQuickCheckout(pulse) {
+      const shortcut = ensureMenuQuickCheckout();
+      const count = cartCount();
+      const total = cartSubtotal();
+      const meta = shortcut.querySelector("[data-menu-cart-meta]");
+      const totalEl = shortcut.querySelector("[data-menu-cart-total]");
+      const panel = shortcut.firstElementChild;
+
+      if (count <= 0) {
+        shortcut.classList.add("hidden");
+        if (pageMain) pageMain.style.paddingBottom = "";
+        return;
+      }
+
+      if (meta) {
+        meta.textContent = `${count} producto${count === 1 ? "" : "s"} listo${count === 1 ? "" : "s"} para pagar`;
+      }
+      if (totalEl) {
+        totalEl.textContent = `Total estimado: ${cop(total)}`;
+      }
+      shortcut.classList.remove("hidden");
+      if (pageMain) pageMain.style.paddingBottom = "12rem";
+
+      if (pulse && panel) {
+        panel.classList.add("ring-2", "ring-primary/40");
+        setTimeout(() => panel.classList.remove("ring-2", "ring-primary/40"), 260);
+      }
+    }
 
     function renderCats() {
       if (!navCats) return;
@@ -323,13 +493,17 @@
       const ok = addCart(item, 1);
       if (!ok) return;
       updateBadges();
+      renderMenuQuickCheckout(true);
     });
 
     updateBadges();
+    renderMenuQuickCheckout(false);
   }
 
   async function initDetail() {
     if (PAGE !== "detalle.html") return;
+
+    wireBackTrigger(findBackTrigger(), "./menu.html", "Volver al menu");
 
     const params = new URLSearchParams(location.search);
     const id = pInt(params.get("id")) || pInt(localStorage.getItem(KEY.lastItem));
@@ -393,7 +567,18 @@
 
     const main = document.querySelector("main");
     const summary = document.querySelector("section.mt-auto");
+    const backBtn = document.querySelector("header button");
     if (!main || !summary) return;
+
+    if (backBtn && backBtn.dataset.backWired !== "1") {
+      backBtn.dataset.backWired = "1";
+      backBtn.type = "button";
+      backBtn.setAttribute("aria-label", "Volver al menu");
+      backBtn.addEventListener("click", () => {
+        if (window.history.length > 1) window.history.back();
+        else location.href = "./menu.html";
+      });
+    }
 
     function row(item) {
       return `<article class="flex items-center gap-4 bg-white dark:bg-primary/5 p-3 rounded-xl border border-slate-200 dark:border-primary/10" data-id="${item.id}">
@@ -441,6 +626,26 @@
   }
   function initCheckout() {
     if (PAGE !== "checkout.html") return;
+
+    const backIcon = Array.from(document.querySelectorAll("div.sticky.top-0 span.material-symbols-outlined"))
+      .find((el) => (el.textContent || "").trim() === "arrow_back");
+    const backTrigger = backIcon?.closest("div,button");
+    const goBack = () => {
+      if (window.history.length > 1) window.history.back();
+      else location.href = "./carrito.html";
+    };
+    if (backTrigger && backTrigger.dataset.backWired !== "1") {
+      backTrigger.dataset.backWired = "1";
+      backTrigger.setAttribute("role", "button");
+      backTrigger.setAttribute("tabindex", "0");
+      backTrigger.addEventListener("click", goBack);
+      backTrigger.addEventListener("keydown", (ev) => {
+        if (ev.key === "Enter" || ev.key === " ") {
+          ev.preventDefault();
+          goBack();
+        }
+      });
+    }
 
     const summaryRoot = document.querySelector("div.px-4.py-4.mb-32");
     const summaryList = summaryRoot?.querySelector(".flex.flex-col.gap-3");
@@ -528,6 +733,8 @@
   async function initEstado() {
     if (PAGE !== "estado.html") return;
 
+    wireBackTrigger(findBackTrigger(), "./perfil.html", "Volver");
+
     const params = new URLSearchParams(location.search);
     const id = pInt(params.get("order_id") || params.get("id")) || pInt(localStorage.getItem(KEY.lastOrder));
 
@@ -603,12 +810,15 @@
   async function initPerfil() {
     if (PAGE !== "perfil.html") return;
 
+    wireBackTrigger(findBackTrigger(), "./index.html", "Volver al inicio");
+
     const nameEl = document.querySelector("section h1");
     const subtitleEl = document.querySelector("section p.text-slate-500");
     const ordersWrap = document.querySelector("div.flex.flex-col.gap-4.p-4.mb-24");
     const settingsBtn = document.querySelector("header button");
 
     if (!ordersWrap) return;
+    let authMode = "login";
 
     function fmt(dateText) {
       if (!dateText) return "Fecha no disponible";
@@ -625,25 +835,36 @@
       if (icon) icon.textContent = loggedIn ? "logout" : "login";
     }
 
-    function renderLoginForm(text) {
+    function renderAuthForm(text) {
+      const isRegister = authMode === "register";
       ordersWrap.innerHTML = `
-        <form id="profile-login-form" class="rounded-xl bg-slate-100 dark:bg-primary/5 p-4 border border-slate-200 dark:border-primary/10 space-y-3">
-          <h3 class="text-base font-bold">Inicia sesion</h3>
-          <input id="profile-login-username" name="username" type="text" placeholder="Usuario" class="w-full rounded-lg border border-slate-200 dark:border-primary/20 bg-white dark:bg-primary/10 px-3 py-2 text-sm" required />
-          <input id="profile-login-password" name="password" type="password" placeholder="Contraseña" class="w-full rounded-lg border border-slate-200 dark:border-primary/20 bg-white dark:bg-primary/10 px-3 py-2 text-sm" required />
-          <button type="submit" class="w-full rounded-lg bg-primary text-background-dark font-bold py-2">Entrar</button>
+        <form id="profile-auth-form" class="rounded-xl bg-slate-100 dark:bg-primary/5 p-4 border border-slate-200 dark:border-primary/10 space-y-3">
+          <h3 class="text-base font-bold">${isRegister ? "Crear cuenta" : "Inicia sesion"}</h3>
+          <input name="username" type="text" placeholder="Usuario" class="w-full rounded-lg border border-slate-200 dark:border-primary/20 bg-white dark:bg-primary/10 px-3 py-2 text-sm" required />
+          ${isRegister ? '<input name="name" type="text" placeholder="Nombre completo" class="w-full rounded-lg border border-slate-200 dark:border-primary/20 bg-white dark:bg-primary/10 px-3 py-2 text-sm" required />' : ""}
+          ${isRegister ? '<input name="email" type="email" placeholder="Correo (opcional)" class="w-full rounded-lg border border-slate-200 dark:border-primary/20 bg-white dark:bg-primary/10 px-3 py-2 text-sm" />' : ""}
+          ${isRegister ? '<input name="phone" type="tel" placeholder="Telefono" class="w-full rounded-lg border border-slate-200 dark:border-primary/20 bg-white dark:bg-primary/10 px-3 py-2 text-sm" required />' : ""}
+          <input name="password" type="password" placeholder="Contrasena" class="w-full rounded-lg border border-slate-200 dark:border-primary/20 bg-white dark:bg-primary/10 px-3 py-2 text-sm" required />
+          ${isRegister ? '<input name="password_confirm" type="password" placeholder="Confirmar contrasena" class="w-full rounded-lg border border-slate-200 dark:border-primary/20 bg-white dark:bg-primary/10 px-3 py-2 text-sm" required />' : ""}
+          <button type="submit" class="w-full rounded-lg bg-primary text-background-dark font-bold py-2">${isRegister ? "Registrarme" : "Entrar"}</button>
+          <button type="button" data-switch-auth class="w-full rounded-lg bg-slate-200 dark:bg-primary/10 text-slate-900 dark:text-slate-100 font-semibold py-2">${isRegister ? "Ya tengo cuenta" : "Crear cuenta nueva"}</button>
           ${text ? `<p class="text-xs ${text.includes("Error") ? "text-rose-500" : "text-slate-500 dark:text-slate-400"}">${esc(text)}</p>` : ""}
         </form>
       `;
 
-      const form = document.getElementById("profile-login-form");
+      const form = document.getElementById("profile-auth-form");
+      const switchButton = form?.querySelector("button[data-switch-auth]");
+      switchButton?.addEventListener("click", () => {
+        authMode = authMode === "login" ? "register" : "login";
+        renderAuthForm("");
+      });
+
       form?.addEventListener("submit", async (ev) => {
         ev.preventDefault();
         const username = String(form.username?.value || "").trim();
         const password = String(form.password?.value || "");
-
         if (!username || !password) {
-          renderLoginForm("Usuario y contraseña son obligatorios.");
+          renderAuthForm("Usuario y contrasena son obligatorios.");
           return;
         }
 
@@ -651,12 +872,29 @@
         if (submitButton) submitButton.disabled = true;
 
         try {
-          const result = await api.login(username, password);
+          let result;
+          if (authMode === "register") {
+            const payload = {
+              username,
+              name: String(form.name?.value || "").trim(),
+              email: String(form.email?.value || "").trim(),
+              phone: String(form.phone?.value || "").trim(),
+              password,
+              password_confirm: String(form.password_confirm?.value || "")
+            };
+            result = await api.register(payload);
+          } else {
+            result = await api.login(username, password);
+          }
+
           saveAuthToken(result?.token || "");
-          if (result?.user?.customer_id) localStorage.setItem("noah_customer_id", String(result.user.customer_id));
+          if (result?.user?.customer_id) {
+            localStorage.setItem("noah_customer_id", String(result.user.customer_id));
+          }
           await loadAuthenticatedProfile();
         } catch (e) {
-          renderLoginForm(`Error de inicio de sesion: ${e.message}`);
+          const prefix = authMode === "register" ? "Error de registro" : "Error de inicio de sesion";
+          renderAuthForm(`${prefix}: ${e.message}`);
         } finally {
           if (submitButton) submitButton.disabled = false;
         }
@@ -707,7 +945,6 @@
 
         if (nameEl) nameEl.textContent = user.customer_name || user.username || "Usuario";
         if (subtitleEl) subtitleEl.textContent = user.email || user.username || "";
-
         setHeaderMode(true);
 
         const orders = await api.listOrders();
@@ -717,8 +954,8 @@
           saveAuthToken("");
           setHeaderMode(false);
           if (nameEl) nameEl.textContent = "Invitado";
-          if (subtitleEl) subtitleEl.textContent = "Inicia sesion para ver tu perfil";
-          renderLoginForm("Inicia sesion para ver historial y pagar pedidos.");
+          if (subtitleEl) subtitleEl.textContent = "Inicia sesion o registrate para continuar";
+          renderAuthForm("Inicia sesion o crea tu cuenta para ver historial y pagar pedidos.");
           return;
         }
         message(ordersWrap, `No se pudo cargar el perfil: ${e.message}`, true);
@@ -727,25 +964,28 @@
 
     settingsBtn?.addEventListener("click", async () => {
       if ((settingsBtn.dataset.mode || "") !== "logout") {
-        document.getElementById("profile-login-username")?.focus();
+        document.querySelector("#profile-auth-form input[name='username']")?.focus();
         return;
       }
+
       try {
         await api.logout();
       } catch (e) {
         // Si el token ya no existe en backend, igual limpiamos localmente.
       }
+
       saveAuthToken("");
       setHeaderMode(false);
       if (nameEl) nameEl.textContent = "Invitado";
-      if (subtitleEl) subtitleEl.textContent = "Inicia sesion para ver tu perfil";
-      renderLoginForm("Sesion cerrada correctamente.");
+      if (subtitleEl) subtitleEl.textContent = "Inicia sesion o registrate para continuar";
+      renderAuthForm("Sesion cerrada correctamente.");
     });
 
     await loadAuthenticatedProfile();
   }
 
   async function boot() {
+    normalizeBottomNav();
     initIndex();
     await initMenu();
     await initDetail();
@@ -760,3 +1000,4 @@
     boot().catch((e) => console.error("Frontend boot error:", e));
   });
 })();
+
