@@ -40,26 +40,36 @@
         </div>
         <h2 class="text-primary text-[24px] font-bold leading-tight tracking-tight mt-2">$45.000 COP</h2>
         <div class="flex gap-2 mt-4">
-          <span class="px-3 py-1 rounded-full bg-slate-200 dark:bg-slate-800 text-xs font-medium">Gluten Free</span>
-          <span class="px-3 py-1 rounded-full bg-slate-200 dark:bg-slate-800 text-xs font-medium">Organic</span>
+          <span class="px-3 py-1 rounded-full bg-slate-200 dark:bg-slate-800 text-xs font-medium">Sin gluten</span>
+          <span class="px-3 py-1 rounded-full bg-slate-200 dark:bg-slate-800 text-xs font-medium">Artesanal</span>
         </div>
         <div class="mt-6">
-          <h3 class="text-slate-900 dark:text-slate-100 font-semibold mb-2">Description</h3>
+          <h3 class="text-slate-900 dark:text-slate-100 font-semibold mb-2">Descripción</h3>
           <p class="text-slate-600 dark:text-slate-400 text-base font-normal leading-relaxed">
-            Delicious artisanal food product made with fresh organic ingredients from local farmers. This special burger features aged cheddar, caramelized onions, and our secret Noah sauce on a brioche bun.
+            Producto artesanal preparado con ingredientes frescos. Esta hamburguesa destaca por su queso maduro, cebolla caramelizada y salsa secreta Noah en pan brioche.
           </p>
         </div>
         <!-- Product Options Placeholder -->
         <div class="mt-8">
-          <h3 class="text-slate-900 dark:text-slate-100 font-semibold mb-3">Customization</h3>
+          <h3 class="text-slate-900 dark:text-slate-100 font-semibold mb-3">Personalización</h3>
           <div class="space-y-3">
+            <p class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 font-semibold">Opciones obligatorias</p>
             <label class="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
-              <span class="text-sm font-medium">Extra Cheese</span>
-              <input class="w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary bg-transparent" type="checkbox"/>
+              <span class="text-sm font-medium">Pan tradicional</span>
+              <input checked class="w-5 h-5 border-slate-300 text-primary focus:ring-primary bg-transparent" type="radio" name="bread_choice" data-extra-option="Pan tradicional"/>
             </label>
             <label class="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
-              <span class="text-sm font-medium">Gluten-free Bread</span>
-              <input class="w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary bg-transparent" type="checkbox"/>
+              <span class="text-sm font-medium">Pan sin gluten</span>
+              <input class="w-5 h-5 border-slate-300 text-primary focus:ring-primary bg-transparent" type="radio" name="bread_choice" data-extra-option="Pan sin gluten"/>
+            </label>
+            <p class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 font-semibold pt-2">Extras opcionales</p>
+            <label class="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+              <span class="text-sm font-medium">Queso extra</span>
+              <input class="w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary bg-transparent" type="checkbox" data-extra-option="Queso extra"/>
+            </label>
+            <label class="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+              <span class="text-sm font-medium">Tocineta crocante</span>
+              <input class="w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary bg-transparent" type="checkbox" data-extra-option="Tocineta crocante"/>
             </label>
           </div>
         </div>

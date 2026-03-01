@@ -11,6 +11,7 @@
   };
 
   const PAGE = (window.location.pathname.split("/").pop() || "index.html").toLowerCase();
+  let lastBadgeCount = null;
 
   function pInt(v) {
     const n = Number.parseInt(String(v || ""), 10);
@@ -32,6 +33,58 @@
       currency: "COP",
       maximumFractionDigits: 0
     }).format(Number(v || 0));
+  }
+
+  function fmtDateTime(dateText) {
+    if (!dateText) return "Pendiente";
+    const d = new Date(dateText);
+    if (Number.isNaN(d.getTime())) return String(dateText);
+    return new Intl.DateTimeFormat("es-CO", {
+      dateStyle: "medium",
+      timeStyle: "short"
+    }).format(d);
+  }
+
+  function fmtRelative(dateText) {
+    if (!dateText) return "";
+    const d = new Date(dateText);
+    if (Number.isNaN(d.getTime())) return "";
+    const delta = d.getTime() - Date.now();
+    const absMs = Math.abs(delta);
+    const rtf = new Intl.RelativeTimeFormat("es", { numeric: "auto" });
+    const minute = 60 * 1000;
+    const hour = 60 * minute;
+    const day = 24 * hour;
+
+    if (absMs < hour) return rtf.format(Math.round(delta / minute), "minute");
+    if (absMs < day) return rtf.format(Math.round(delta / hour), "hour");
+    return rtf.format(Math.round(delta / day), "day");
+  }
+
+  function fmtDateWithAgo(dateText) {
+    const full = fmtDateTime(dateText);
+    const rel = fmtRelative(dateText);
+    return rel ? `${full} · ${rel}` : full;
+  }
+
+  const ORDER_STATUS_META = {
+    PENDING: { label: "Pendiente", stage: 0, narrative: "Tu pedido ya fue recibido." },
+    IN_PROGRESS: { label: "En preparación", stage: 1, narrative: "Tu pedido está en preparación." },
+    READY: { label: "Listo", stage: 2, narrative: "Tu pedido está listo para salir." },
+    COMPLETED: { label: "Entregado", stage: 3, narrative: "Tu pedido ya fue entregado." },
+    CANCELLED: { label: "Cancelado", stage: -1, narrative: "Este pedido fue cancelado." }
+  };
+
+  function orderStatusLabel(status) {
+    return ORDER_STATUS_META[status]?.label || String(status || "Sin estado");
+  }
+
+  function orderStage(status) {
+    return ORDER_STATUS_META[status]?.stage ?? 0;
+  }
+
+  function orderNarrative(status) {
+    return ORDER_STATUS_META[status]?.narrative || "Estamos procesando tu pedido.";
   }
 
   function arr(data) {
@@ -239,7 +292,10 @@
             image_url: String(i.image_url || ""),
             quantity: Math.max(1, pInt(i.quantity) || 1),
             restaurant: pInt(i.restaurant),
-            category: pInt(i.category)
+            category: pInt(i.category),
+            extras: Array.isArray(i.extras)
+              ? i.extras.map((x) => String(x || "").trim()).filter(Boolean)
+              : []
           }))
           .filter((i) => i.id)
       };
@@ -271,7 +327,14 @@
     }
 
     const found = cart.items.find((x) => x.id === item.id);
-    if (found) found.quantity += q;
+    if (found) {
+      found.quantity += q;
+      const incomingExtras = Array.isArray(item.extras) ? item.extras : [];
+      if (incomingExtras.length) {
+        const merged = new Set([...(found.extras || []), ...incomingExtras]);
+        found.extras = Array.from(merged);
+      }
+    }
     else {
       cart.items.push({
         id: item.id,
@@ -280,7 +343,8 @@
         image_url: item.image_url || "",
         quantity: q,
         restaurant: restaurant,
-        category: pInt(item.category)
+        category: pInt(item.category),
+        extras: Array.isArray(item.extras) ? item.extras.map((x) => String(x || "").trim()).filter(Boolean) : []
       });
     }
     return saveCart(cart);
@@ -358,24 +422,60 @@
 
   function updateBadges() {
     const count = cartCount();
+    const increased = typeof lastBadgeCount === "number" && count > lastBadgeCount;
     const badges = [
       ...Array.from(document.querySelectorAll("[data-cart-badge]")),
       getHeaderCartButton()?.querySelector("span.absolute")
     ];
     badges.forEach((b) => {
       if (!b) return;
+      b.classList.add("transition-transform", "duration-150");
       if (count <= 0) {
         b.classList.add("hidden");
       } else {
         b.classList.remove("hidden");
         b.textContent = String(count);
+        if (increased) {
+          b.classList.remove("scale-110");
+          void b.offsetWidth;
+          b.classList.add("scale-110");
+          setTimeout(() => b.classList.remove("scale-110"), 180);
+        }
       }
     });
+    lastBadgeCount = count;
   }
 
   function message(container, text, error) {
     if (!container) return;
     container.innerHTML = `<div class="rounded-xl border ${error ? "border-rose-300 bg-rose-50 text-rose-700" : "border-slate-200 bg-slate-50 text-slate-700"} p-4 text-sm">${esc(text)}</div>`;
+  }
+
+  function ensureToastHost() {
+    let host = document.getElementById("app-toast-host");
+    if (host) return host;
+    host = document.createElement("div");
+    host.id = "app-toast-host";
+    host.className = "fixed left-1/2 -translate-x-1/2 bottom-28 z-[70] w-full max-w-md px-4 pointer-events-none";
+    document.body.appendChild(host);
+    return host;
+  }
+
+  function showToast(text, error) {
+    const host = ensureToastHost();
+    const toast = document.createElement("div");
+    toast.className = `mb-2 pointer-events-auto rounded-xl border px-4 py-3 text-sm font-medium shadow-lg transition-all duration-200 opacity-0 translate-y-2 ${
+      error
+        ? "border-rose-300 bg-rose-50 text-rose-700"
+        : "border-primary/30 bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100"
+    }`;
+    toast.textContent = text;
+    host.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add("translate-y-0", "opacity-100"));
+    setTimeout(() => {
+      toast.classList.add("opacity-0", "translate-y-2");
+      setTimeout(() => toast.remove(), 220);
+    }, 2200);
   }
 
   function normalizeBottomNav() {
@@ -398,7 +498,7 @@
 
     const items = [
       { key: "home", href: "./index.html", icon: "home", label: "Inicio" },
-      { key: "menu", href: "./menu.html", icon: "widgets", label: "Menu" },
+      { key: "menu", href: "./menu.html", icon: "widgets", label: "Menú" },
       { key: "cart", href: "./carrito.html", icon: "shopping_cart", label: "Carrito" },
       { key: "orders", href: "./estado.html", icon: "receipt_long", label: "Pedidos" },
       { key: "profile", href: "./perfil.html", icon: "person", label: "Perfil" }
@@ -591,6 +691,7 @@
       if (!ok) return;
       updateBadges();
       renderMenuQuickCheckout(true);
+      showToast(`${item.name || "Producto"} agregado al carrito`);
     });
 
     updateBadges();
@@ -653,9 +754,17 @@
 
     addBtn?.addEventListener("click", () => {
       if (!item) return;
-      const ok = addCart(item, qty);
+      const selectedExtras = Array.from(
+        document.querySelectorAll("[data-extra-option]:checked")
+      ).map((input) => String(input.getAttribute("data-extra-option") || "").trim())
+        .filter(Boolean);
+      const itemForCart = { ...item, extras: selectedExtras };
+      const ok = addCart(itemForCart, qty);
       if (!ok) return;
-      location.href = "./carrito.html";
+      showToast(`${qty} ${qty === 1 ? "unidad agregada" : "unidades agregadas"} al carrito`);
+      setTimeout(() => {
+        location.href = "./carrito.html";
+      }, 180);
     });
   }
 
@@ -678,10 +787,13 @@
     }
 
     function row(item) {
+      const extras = Array.isArray(item.extras) && item.extras.length
+        ? `<p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Extras: ${esc(item.extras.join(", "))}</p>`
+        : "";
       return `<article class="flex items-center gap-4 bg-white dark:bg-primary/5 p-3 rounded-xl border border-slate-200 dark:border-primary/10" data-id="${item.id}">
         <div class="h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-800"><img alt="${esc(item.name)}" class="h-full w-full object-cover" src="${esc(item.image_url || "https://placehold.co/200x200?text=Noah")}" /></div>
         <div class="flex flex-1 flex-col justify-between self-stretch">
-          <div class="flex justify-between items-start"><div><h3 class="font-semibold text-base leading-tight">${esc(item.name)}</h3><p class="text-sm text-slate-500 dark:text-primary/60 mt-1">${cop(item.price_cop)}</p></div><button type="button" data-remove="${item.id}" class="text-slate-400 hover:text-red-500"><span class="material-symbols-outlined text-[20px]">delete</span></button></div>
+          <div class="flex justify-between items-start"><div><h3 class="font-semibold text-base leading-tight">${esc(item.name)}</h3><p class="text-sm text-slate-500 dark:text-primary/60 mt-1">${cop(item.price_cop)}</p>${extras}</div><button type="button" data-remove="${item.id}" class="text-slate-400 hover:text-red-500"><span class="material-symbols-outlined text-[20px]">delete</span></button></div>
           <div class="flex items-center justify-end"><div class="flex items-center gap-3 bg-slate-100 dark:bg-primary/20 px-3 py-1 rounded-full"><button type="button" data-dec="${item.id}" class="flex h-6 w-6 items-center justify-center rounded-full text-slate-900 dark:text-primary hover:bg-primary hover:text-white">-</button><span class="text-sm font-bold w-6 text-center">${item.quantity}</span><button type="button" data-inc="${item.id}" class="flex h-6 w-6 items-center justify-center rounded-full text-slate-900 dark:text-primary hover:bg-primary hover:text-white">+</button></div></div>
         </div>
       </article>`;
@@ -696,7 +808,7 @@
         main.innerHTML = cart.items.map(row).join("");
       }
 
-      summary.innerHTML = `<div class="space-y-2"><div class="flex justify-between text-slate-500 dark:text-primary/70"><span>Subtotal</span><span>${cop(subtotal)}</span></div><div class="flex justify-between text-slate-500 dark:text-primary/70"><span>Envio</span><span class="text-primary font-medium">Se calcula al confirmar</span></div><div class="flex justify-between text-lg font-bold pt-2 border-t border-slate-100 dark:border-primary/10"><span>Total estimado</span><span class="text-primary">${cop(subtotal)}</span></div></div><button type="button" data-checkout class="w-full bg-primary py-4 rounded-xl text-background-dark font-bold text-lg ${cart.items.length ? "" : "opacity-50 cursor-not-allowed"}" ${cart.items.length ? "" : "disabled"}>Ir a pagar</button>`;
+      summary.innerHTML = `<div class="space-y-2"><div class="flex justify-between text-slate-500 dark:text-primary/70"><span>Subtotal</span><span>${cop(subtotal)}</span></div><div class="flex justify-between text-slate-500 dark:text-primary/70"><span>Envío</span><span class="text-primary font-medium">Envío calculado al confirmar</span></div><div class="flex justify-between text-lg font-bold pt-2 border-t border-slate-100 dark:border-primary/10"><span>Total estimado</span><span class="text-primary">${cop(subtotal)}</span></div></div><button type="button" data-checkout class="w-full h-14 bg-primary rounded-xl text-background-dark font-bold text-lg ${cart.items.length ? "" : "opacity-50 cursor-not-allowed"}" ${cart.items.length ? "" : "disabled"}>Ir a pagar</button>`;
       updateBadges();
     }
 
@@ -771,7 +883,13 @@
         return;
       }
 
-      summaryList.innerHTML = cart.items.map((i) => `<div class="flex justify-between items-center"><span class="text-slate-500 dark:text-slate-400">${i.quantity}x ${esc(i.name)}</span><span class="text-slate-900 dark:text-slate-100 font-medium">${cop(i.quantity * i.price_cop)}</span></div>`).join("") + `<div class="flex justify-between items-center"><span class="text-slate-500 dark:text-slate-400">Envio</span><span class="text-slate-900 dark:text-slate-100 font-medium">Se calcula en backend</span></div><div class="h-px bg-slate-200 dark:bg-primary/20 my-2"></div><div class="flex justify-between items-center"><span class="text-slate-900 dark:text-slate-100 font-bold">Total estimado</span><span class="text-primary text-xl font-bold">${cop(subtotal)}</span></div>`;
+      const itemRows = cart.items.map((i) => {
+        const extras = Array.isArray(i.extras) && i.extras.length
+          ? `<p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Extras: ${esc(i.extras.join(", "))}</p>`
+          : "";
+        return `<div class="flex items-start justify-between gap-3"><div><span class="text-slate-500 dark:text-slate-400">${i.quantity}x ${esc(i.name)}</span>${extras}</div><span class="text-slate-900 dark:text-slate-100 font-medium">${cop(i.quantity * i.price_cop)}</span></div>`;
+      }).join("");
+      summaryList.innerHTML = itemRows + `<div class="flex justify-between items-center"><span class="text-slate-500 dark:text-slate-400">Envío</span><span class="text-slate-900 dark:text-slate-100 font-medium">Costo final confirmado al procesar tu pedido</span></div><div class="h-px bg-slate-200 dark:bg-primary/20 my-2"></div><div class="flex justify-between items-center"><span class="text-slate-900 dark:text-slate-100 font-bold">Total estimado</span><span class="text-primary text-xl font-bold">${cop(subtotal)}</span></div>`;
 
       if (button) {
         button.disabled = false;
@@ -835,11 +953,17 @@
     const params = new URLSearchParams(location.search);
     const id = pInt(params.get("order_id") || params.get("id")) || pInt(localStorage.getItem(KEY.lastOrder));
 
+    const sections = document.querySelectorAll("main section");
+    const headerSection = sections[0];
     const idEl = document.querySelector("section p.text-2xl.font-bold");
     const badge = document.querySelector("section div.rounded-full");
     const title = document.querySelector("section p.text-lg.font-bold");
     const meta = document.querySelector("section p.text-slate-500");
-    const timeline = document.querySelectorAll("main section")[1];
+    const timeline = sections[1];
+    const imageWrap = headerSection?.querySelector("div[class*='aspect-[16/7]']");
+    const narrativeEl = document.createElement("p");
+    narrativeEl.className = "text-sm text-slate-500 dark:text-slate-400 mt-2";
+    meta?.insertAdjacentElement("afterend", narrativeEl);
 
     let order = null;
 
@@ -865,21 +989,19 @@
 
     if (idEl) idEl.textContent = `#${order.order_number || order.id}`;
 
-    const statusMap = {
-      PENDING: "PENDIENTE",
-      IN_PROGRESS: "EN PREPARACION",
-      READY: "LISTO",
-      COMPLETED: "ENTREGADO",
-      CANCELLED: "CANCELADO"
-    };
-    const status = order.status || "PENDING";
-    const statusText = statusMap[status] || status;
+    const status = String(order.status || "PENDING").toUpperCase();
+    const statusText = orderStatusLabel(status);
 
     if (badge) {
+      const tone = status === "COMPLETED"
+        ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30"
+        : status === "CANCELLED"
+        ? "bg-rose-500/10 text-rose-600 border-rose-500/30"
+        : status === "READY"
+        ? "bg-sky-500/10 text-sky-600 border-sky-500/30"
+        : "bg-primary/10 text-primary border-primary/30";
       badge.textContent = statusText;
-      badge.className = "px-3 py-1 rounded-full text-xs font-bold border bg-primary/10 text-primary border-primary/30";
-      if (status === "COMPLETED") badge.className = "px-3 py-1 rounded-full text-xs font-bold border bg-emerald-500/10 text-emerald-600 border-emerald-500/30";
-      if (status === "CANCELLED") badge.className = "px-3 py-1 rounded-full text-xs font-bold border bg-rose-500/10 text-rose-600 border-rose-500/30";
+      badge.className = `px-3 py-1 rounded-full text-xs font-bold border ${tone}`;
     }
 
     if (title) {
@@ -889,18 +1011,80 @@
 
     if (meta) {
       const qty = (order.items || []).reduce((a, i) => a + Number(i.quantity || 0), 0);
-      meta.textContent = `${qty} items - ${cop(order.total_cop || 0)}`;
+      meta.textContent = `${qty} producto${qty === 1 ? "" : "s"} · ${cop(order.total_cop || 0)}`;
+    }
+
+    if (narrativeEl) {
+      const eta = status === "PENDING" || status === "IN_PROGRESS"
+        ? (order.eta_ready_at ? ` · ETA ${fmtDateTime(order.eta_ready_at)}` : "")
+        : "";
+      narrativeEl.textContent = `${orderNarrative(status)}${eta}`;
+    }
+
+    if (imageWrap) {
+      let imageUrl = "";
+      const firstItem = (order.items || [])[0];
+      if (firstItem) {
+        imageUrl = String(firstItem.image_url || firstItem.menu_item_image_url || "").trim();
+        const menuItemId = pInt(firstItem.menu_item || firstItem.menu_item_id);
+        if (!imageUrl && menuItemId) {
+          try {
+            const menuItem = await api.getMenuItem(menuItemId);
+            imageUrl = String(menuItem?.image_url || "").trim();
+          } catch {
+            imageUrl = "";
+          }
+        }
+      }
+
+      if (imageUrl) {
+        imageWrap.innerHTML = `<img src="${esc(imageUrl)}" alt="Resumen de tu pedido" class="h-full w-full object-cover" loading="lazy" />`;
+      } else {
+        imageWrap.innerHTML = `
+          <div class="h-full w-full flex items-center justify-center bg-gradient-to-br from-slate-200 to-slate-100 dark:from-slate-800 dark:to-slate-900">
+            <div class="flex flex-col items-center gap-2 text-slate-500 dark:text-slate-400">
+              <span class="material-symbols-outlined text-3xl">lunch_dining</span>
+              <p class="text-xs font-medium">Tu pedido está en camino</p>
+            </div>
+          </div>
+        `;
+      }
     }
 
     if (timeline) {
+      const reachedByTime = order.completed_at
+        ? 3
+        : order.ready_at
+        ? 2
+        : order.in_progress_at
+        ? 1
+        : 0;
+      const currentStage = status === "CANCELLED"
+        ? reachedByTime
+        : Math.max(0, Math.min(3, orderStage(status)));
       const steps = [
-        { name: "Nuevo", done: true, at: order.pending_at || order.created_at || "Pendiente" },
-        { name: "Preparacion", done: ["IN_PROGRESS", "READY", "COMPLETED"].includes(status), at: order.in_progress_at || "Pendiente" },
-        { name: "Listo", done: ["READY", "COMPLETED"].includes(status), at: order.ready_at || "Pendiente" },
-        { name: "Entregado", done: status === "COMPLETED", at: order.completed_at || "Pendiente" }
+        { name: "Nuevo", at: order.pending_at || order.created_at || "" },
+        { name: "Preparación", at: order.in_progress_at || "" },
+        { name: "Listo", at: order.ready_at || "" },
+        { name: "Entregado", at: order.completed_at || "" }
       ];
 
-      timeline.innerHTML = `<div class="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-white dark:bg-slate-900/40"><div class="space-y-4">${steps.map((s) => `<div class="flex items-start gap-3 ${s.done ? "" : "opacity-75"}"><div class="mt-0.5 h-7 w-7 rounded-full flex items-center justify-center ${s.done ? "bg-primary text-background-dark" : "bg-slate-200 dark:bg-slate-800 text-slate-500"}"><span class="material-symbols-outlined text-[16px]">${s.done ? "check" : "radio_button_unchecked"}</span></div><div><p class="${s.done ? "text-slate-900 dark:text-slate-100 font-semibold" : "text-slate-500 dark:text-slate-400"}">${s.name}</p><p class="text-xs text-slate-500 dark:text-slate-400">${s.at}</p></div></div>`).join("")}${status === "CANCELLED" ? '<div class="mt-3 rounded-lg border border-rose-300 bg-rose-50 text-rose-700 p-3 text-sm">Este pedido fue cancelado.</div>' : ""}</div></div>`;
+      timeline.innerHTML = `<div class="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-white dark:bg-slate-900/40"><div class="space-y-4">${steps.map((s, idx) => {
+        const phase = idx < currentStage ? "done" : idx === currentStage ? "current" : "future";
+        const iconWrap = phase === "done"
+          ? "bg-primary text-background-dark"
+          : phase === "current"
+          ? "bg-primary/15 text-primary ring-2 ring-primary/30"
+          : "bg-slate-200 dark:bg-slate-800 text-slate-500";
+        const icon = phase === "done" ? "check" : phase === "current" ? "schedule" : "radio_button_unchecked";
+        const textTone = phase === "future" ? "text-slate-500 dark:text-slate-400" : "text-slate-900 dark:text-slate-100 font-semibold";
+        const when = s.at
+          ? fmtDateWithAgo(s.at)
+          : phase === "future"
+          ? "Pendiente"
+          : "En curso";
+        return `<div class="flex items-start gap-3"><div class="mt-0.5 h-7 w-7 rounded-full flex items-center justify-center ${iconWrap}"><span class="material-symbols-outlined text-[16px]">${icon}</span></div><div><p class="${textTone}">${s.name}</p><p class="text-xs text-slate-500 dark:text-slate-400">${esc(when)}</p></div></div>`;
+      }).join("")}${status === "CANCELLED" ? '<div class="mt-3 rounded-lg border border-rose-300 bg-rose-50 text-rose-700 p-3 text-sm">Este pedido fue cancelado. Si necesitas ayuda, contáctanos.</div>' : ""}</div></div>`;
     }
   }
 
@@ -913,15 +1097,26 @@
     const subtitleEl = document.querySelector("section p.text-slate-500");
     const ordersWrap = document.querySelector("div.flex.flex-col.gap-4.p-4.mb-24");
     const settingsBtn = document.querySelector("header button");
+    const avatarEl = document.querySelector("[data-profile-avatar]");
 
     if (!ordersWrap) return;
     let authMode = "login";
+    let ordersById = new Map();
 
-    function fmt(dateText) {
-      if (!dateText) return "Fecha no disponible";
-      const d = new Date(dateText);
-      if (Number.isNaN(d.getTime())) return dateText;
-      return new Intl.DateTimeFormat("es-CO", { dateStyle: "medium", timeStyle: "short" }).format(d);
+    function setAvatar(name) {
+      if (!avatarEl) return;
+      const raw = String(name || "").trim();
+      if (!raw || raw.toLowerCase() === "invitado") {
+        avatarEl.innerHTML = '<span class="material-symbols-outlined text-5xl text-slate-500 dark:text-slate-400">person</span>';
+        return;
+      }
+      const letters = raw
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((x) => x[0]?.toUpperCase() || "")
+        .join("");
+      avatarEl.innerHTML = `<span class="text-4xl font-black tracking-tight text-slate-900 dark:text-slate-100">${esc(letters || raw[0]?.toUpperCase() || "N")}</span>`;
     }
 
     function setHeaderMode(loggedIn) {
@@ -1000,48 +1195,103 @@
 
     function renderOrders(orders) {
       if (!orders.length) {
-        message(ordersWrap, "No tienes pedidos aun.", false);
+        ordersWrap.innerHTML = `<div class="rounded-xl border border-slate-200 dark:border-primary/20 bg-white dark:bg-primary/5 p-5 text-center">
+          <p class="text-base font-semibold mb-2">Aún no tienes pedidos</p>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Cuando completes tu primer pedido, lo verás aquí.</p>
+          <a href="./menu.html" class="inline-flex h-11 items-center justify-center rounded-xl bg-primary px-4 text-sm font-bold text-background-dark">Ir al menú</a>
+        </div>`;
         return;
       }
 
-      const statusMap = {
-        PENDING: "PENDIENTE",
-        IN_PROGRESS: "EN PREPARACION",
-        READY: "LISTO",
-        COMPLETED: "ENTREGADO",
-        CANCELLED: "CANCELADO"
-      };
+      ordersById = new Map(orders.map((o) => [String(o.id), o]));
 
       ordersWrap.innerHTML = orders.slice(0, 10).map((order) => {
         const qty = (order.items || []).reduce((a, i) => a + Number(i.quantity || 0), 0);
-        const status = statusMap[order.status] || (order.status || "SIN ESTADO");
-        const statusColor = order.status === "COMPLETED"
+        const statusRaw = String(order.status || "").toUpperCase();
+        const status = orderStatusLabel(statusRaw);
+        const statusColor = statusRaw === "COMPLETED"
           ? "text-emerald-500"
-          : order.status === "CANCELLED"
+          : statusRaw === "CANCELLED"
           ? "text-rose-500"
           : "text-primary";
+        const action = statusRaw === "COMPLETED"
+          ? `<button type="button" data-repeat-order="${order.id}" class="inline-flex items-center justify-center gap-2 rounded-lg h-10 border border-primary/30 bg-primary/10 text-primary text-sm font-bold">Repetir pedido</button>`
+          : `<a href="./estado.html?order_id=${order.id}" class="inline-flex items-center justify-center gap-2 rounded-lg h-10 bg-primary text-background-dark text-sm font-bold">Ver estado</a>`;
 
         return `
           <article class="flex flex-col gap-3 rounded-xl bg-slate-100 dark:bg-primary/5 p-4 border border-slate-200 dark:border-primary/10">
             <div class="flex items-center justify-between gap-3">
               <p class="text-xs font-bold tracking-wide ${statusColor}">${status}</p>
-              <p class="text-xs text-slate-500 dark:text-slate-400">${fmt(order.created_at)}</p>
+              <p class="text-xs text-slate-500 dark:text-slate-400">${fmtDateWithAgo(order.created_at)}</p>
             </div>
             <p class="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight">Pedido #${esc(order.order_number || order.id)}</p>
-            <p class="text-slate-600 dark:text-slate-400 text-sm">${qty} items - ${cop(order.total_cop || 0)}</p>
-            <a href="./estado.html?order_id=${order.id}" class="inline-flex items-center justify-center gap-2 rounded-lg h-10 bg-primary text-background-dark text-sm font-bold">Ver estado</a>
+            <p class="text-slate-600 dark:text-slate-400 text-sm">${qty} producto${qty === 1 ? "" : "s"} · ${cop(order.total_cop || 0)}</p>
+            ${action}
           </article>
         `;
       }).join("");
     }
 
+    ordersWrap.addEventListener("click", async (ev) => {
+      const btn = ev.target.closest("button[data-repeat-order]");
+      if (!btn) return;
+      const order = ordersById.get(String(btn.dataset.repeatOrder || ""));
+      if (!order) {
+        showToast("No se encontró el pedido para repetir.", true);
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = "Cargando...";
+
+      try {
+        const requested = (order.items || []).map((it) => ({
+          id: pInt(it.menu_item || it.menu_item_id),
+          quantity: Math.max(1, pInt(it.quantity) || 1)
+        })).filter((x) => x.id);
+        if (!requested.length) throw new Error("El pedido no tiene productos válidos.");
+
+        const loaded = await Promise.all(requested.map(async (line) => {
+          const menuItem = await api.getMenuItem(line.id);
+          return {
+            id: pInt(menuItem.id),
+            name: String(menuItem.name || "Producto"),
+            price_cop: Number(menuItem.price_cop || 0),
+            image_url: String(menuItem.image_url || ""),
+            quantity: line.quantity,
+            restaurant: pInt(menuItem.restaurant),
+            category: pInt(menuItem.category),
+            extras: []
+          };
+        }));
+
+        const restaurantId = pInt(order.restaurant) || pInt(loaded[0]?.restaurant);
+        saveCart({
+          restaurant_id: restaurantId,
+          items: loaded.filter((x) => x.id)
+        });
+        if (restaurantId) localStorage.setItem(KEY.restaurant, String(restaurantId));
+        updateBadges();
+        showToast("Pedido cargado. Puedes confirmar en el carrito.");
+        setTimeout(() => {
+          location.href = "./carrito.html";
+        }, 180);
+      } catch (e) {
+        showToast(`No se pudo repetir el pedido: ${e.message}`, true);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Repetir pedido";
+      }
+    });
+
     async function loadAuthenticatedProfile() {
       try {
         const me = await api.me();
         const user = me?.user || {};
+        const displayName = user.customer_name || user.username || "Usuario";
 
-        if (nameEl) nameEl.textContent = user.customer_name || user.username || "Usuario";
-        if (subtitleEl) subtitleEl.textContent = user.email || user.username || "";
+        if (nameEl) nameEl.textContent = displayName;
+        if (subtitleEl) subtitleEl.textContent = user.email || `@${user.username || ""}`;
+        setAvatar(displayName);
         setHeaderMode(true);
 
         const orders = await api.listOrders();
@@ -1052,6 +1302,7 @@
           setHeaderMode(false);
           if (nameEl) nameEl.textContent = "Invitado";
           if (subtitleEl) subtitleEl.textContent = "Inicia sesion o registrate para continuar";
+          setAvatar("Invitado");
           renderAuthForm("Inicia sesion o crea tu cuenta para ver historial y pagar pedidos.");
           return;
         }
@@ -1075,6 +1326,7 @@
       setHeaderMode(false);
       if (nameEl) nameEl.textContent = "Invitado";
       if (subtitleEl) subtitleEl.textContent = "Inicia sesion o registrate para continuar";
+      setAvatar("Invitado");
       renderAuthForm("Sesion cerrada correctamente.");
     });
 
