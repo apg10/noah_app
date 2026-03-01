@@ -1,5 +1,6 @@
 # core/models.py
 import uuid
+import secrets
 from django.db import models
 from django.utils import timezone
 from django.conf import settings
@@ -101,6 +102,40 @@ class Customer(TimeStampedModel):
 
     def __str__(self):
         return self.name or self.phone
+
+
+# ----------------------------------------------------------------------
+# 4b. Session token per device
+# ----------------------------------------------------------------------
+class UserSessionToken(TimeStampedModel):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="session_tokens",
+    )
+    key = models.CharField(max_length=64, unique=True, db_index=True)
+    device_name = models.CharField(max_length=120, blank=True)
+    user_agent = models.CharField(max_length=255, blank=True)
+    last_used_at = models.DateTimeField(default=timezone.now)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["user"]),
+            models.Index(fields=["is_active"]),
+        ]
+
+    @staticmethod
+    def generate_key() -> str:
+        return secrets.token_hex(32)
+
+    def save(self, *args, **kwargs):
+        if not self.key:
+            self.key = self.generate_key()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"session:{self.user_id}:{self.key[:8]}"
 
 
 # ----------------------------------------------------------------------

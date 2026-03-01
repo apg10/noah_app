@@ -10,7 +10,6 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.authtoken.models import Token
 
 from .models import (
     Restaurant,
@@ -26,6 +25,7 @@ from .models import (
     Order,
     OrderItem,
     Event,
+    UserSessionToken,
 )
 from .serializers import (
     RestaurantSerializer,
@@ -61,6 +61,16 @@ class IsAdminOrReadOnly(permissions.BasePermission):
         return bool(request.user and request.user.is_staff)
 
 
+def _create_user_session(user, request):
+    device_name = str(request.data.get("device_name", "") or "").strip()[:120]
+    user_agent = str(request.META.get("HTTP_USER_AGENT", "") or "").strip()[:255]
+    return UserSessionToken.objects.create(
+        user=user,
+        device_name=device_name,
+        user_agent=user_agent,
+    )
+
+
 class AuthLoginView(APIView):
     permission_classes = [permissions.AllowAny]
     authentication_classes = []
@@ -85,7 +95,7 @@ class AuthLoginView(APIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        token, _ = Token.objects.get_or_create(user=user)
+        token = _create_user_session(user, request)
         return Response(
             {"token": token.key, "user": AuthUserSerializer(user).data},
             status=status.HTTP_200_OK,
@@ -100,7 +110,7 @@ class AuthRegisterView(APIView):
         serializer = AuthRegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        token, _ = Token.objects.get_or_create(user=user)
+        token = _create_user_session(user, request)
         return Response(
             {"token": token.key, "user": AuthUserSerializer(user).data},
             status=status.HTTP_201_CREATED,
@@ -118,7 +128,9 @@ class AuthLogoutView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        Token.objects.filter(user=request.user).delete()
+        auth = getattr(request, "auth", None)
+        if hasattr(auth, "delete"):
+            auth.delete()
         django_logout(request)
         return Response(status=status.HTTP_204_NO_CONTENT)
 

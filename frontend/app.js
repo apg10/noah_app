@@ -43,7 +43,16 @@
   function apiBase() {
     const fromStorage = (localStorage.getItem(KEY.api) || "").trim();
     if (fromStorage) return fromStorage.replace(/\/+$/, "");
-    if (location.protocol.startsWith("http")) return `${location.origin}/api`;
+    if (location.protocol.startsWith("http")) {
+      const host = location.hostname || "127.0.0.1";
+      const port = location.port || "";
+      // Cuando el frontend se sirve en un puerto dev (5500, 5173, etc.)
+      // el backend vive en :8000 en el mismo host dentro de la LAN.
+      if (port && !["80", "443", "8000"].includes(port)) {
+        return `${location.protocol}//${host}:8000/api`;
+      }
+      return `${location.origin}/api`;
+    }
     return "http://127.0.0.1:8000/api";
   }
 
@@ -89,12 +98,30 @@
       body = JSON.stringify(body);
     }
 
-    const res = await fetch(`${apiBase()}${path}`, {
-      method: opts?.method || "GET",
+    const method = opts?.method || "GET";
+    const doFetch = (baseUrl) => fetch(`${baseUrl}${path}`, {
+      method,
       headers,
       body,
       credentials: "include"
     });
+
+    const primaryBase = apiBase();
+    let res = await doFetch(primaryBase);
+    const ct = (res.headers.get("content-type") || "").toLowerCase();
+    const isHtml404 = res.status === 404 && ct.includes("text/html");
+
+    // Fallback LAN: cuando /api responde HTML 404 desde servidor estatico.
+    if (isHtml404 && location.protocol.startsWith("http")) {
+      const lanBase = `${location.protocol}//${location.hostname}:8000/api`;
+      if (lanBase !== primaryBase) {
+        const retry = await doFetch(lanBase);
+        if (retry.ok || retry.status !== 404) {
+          res = retry;
+          localStorage.setItem(KEY.api, lanBase);
+        }
+      }
+    }
 
     const text = await res.text();
     let data = null;

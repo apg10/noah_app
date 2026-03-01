@@ -3,9 +3,8 @@ from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APIClient
 
-from .models import Customer, DeliveryAddress, MenuItem, Order, Restaurant, Coupon
+from .models import Customer, DeliveryAddress, MenuItem, Order, Restaurant, Coupon, UserSessionToken
 from .serializers import OrderCreateSerializer
-from rest_framework.authtoken.models import Token
 
 
 User = get_user_model()
@@ -125,7 +124,7 @@ class AuthApiTests(TestCase):
         self.assertIn("password_confirm", response.data)
 
     def test_me_requires_valid_token(self):
-        token = Token.objects.create(user=self.user)
+        token = UserSessionToken.objects.create(user=self.user)
         self.client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")
 
         response = self.client.get(reverse("auth-me"))
@@ -135,13 +134,41 @@ class AuthApiTests(TestCase):
         self.assertEqual(response.data["user"]["customer_id"], self.customer.id)
 
     def test_logout_revokes_token(self):
-        token = Token.objects.create(user=self.user)
+        token = UserSessionToken.objects.create(user=self.user)
         self.client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")
 
         response = self.client.post(reverse("auth-logout"), {}, format="json")
 
         self.assertEqual(response.status_code, 204)
-        self.assertFalse(Token.objects.filter(key=token.key).exists())
+        self.assertFalse(UserSessionToken.objects.filter(key=token.key).exists())
+
+    def test_logout_revokes_only_current_device_token(self):
+        token_a = UserSessionToken.objects.create(user=self.user)
+        token_b = UserSessionToken.objects.create(user=self.user)
+
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {token_a.key}")
+        response = self.client.post(reverse("auth-logout"), {}, format="json")
+
+        self.assertEqual(response.status_code, 204)
+        self.assertFalse(UserSessionToken.objects.filter(key=token_a.key).exists())
+        self.assertTrue(UserSessionToken.objects.filter(key=token_b.key).exists())
+
+    def test_login_creates_new_token_per_session(self):
+        response_1 = self.client.post(
+            reverse("auth-login"),
+            {"username": "login_user", "password": "Pass1234!"},
+            format="json",
+        )
+        response_2 = self.client.post(
+            reverse("auth-login"),
+            {"username": "login_user", "password": "Pass1234!"},
+            format="json",
+        )
+
+        self.assertEqual(response_1.status_code, 200)
+        self.assertEqual(response_2.status_code, 200)
+        self.assertNotEqual(response_1.data["token"], response_2.data["token"])
+        self.assertEqual(UserSessionToken.objects.filter(user=self.user).count(), 2)
 
 
 class OrderViewPermissionTests(TestCase):
