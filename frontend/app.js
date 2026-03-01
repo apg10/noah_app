@@ -40,9 +40,30 @@
     return [];
   }
 
+  function normalizeApiBase(raw) {
+    const text = String(raw || "").trim();
+    if (!text) return "";
+    if (!/^https?:\/\//i.test(text)) return "";
+    const noSlash = text.replace(/\/+$/, "");
+    return /\/api$/i.test(noSlash) ? noSlash : `${noSlash}/api`;
+  }
+
   function apiBase() {
-    const fromStorage = (localStorage.getItem(KEY.api) || "").trim();
+    const fromQuery = normalizeApiBase(new URLSearchParams(location.search).get("api"));
+    if (fromQuery) {
+      localStorage.setItem(KEY.api, fromQuery);
+      return fromQuery;
+    }
+
+    const fromStorage = normalizeApiBase(localStorage.getItem(KEY.api));
     if (fromStorage) return fromStorage.replace(/\/+$/, "");
+
+    const fromWindow = normalizeApiBase(window.NOAH_API_BASE_URL || window.__NOAH_API_BASE_URL);
+    if (fromWindow) return fromWindow;
+
+    const fromMeta = normalizeApiBase(document.querySelector("meta[name='noah-api-base']")?.content || "");
+    if (fromMeta) return fromMeta;
+
     if (location.protocol.startsWith("http")) {
       const host = location.hostname || "127.0.0.1";
       const port = location.port || "";
