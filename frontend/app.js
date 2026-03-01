@@ -48,6 +48,48 @@
     return /\/api$/i.test(noSlash) ? noSlash : `${noSlash}/api`;
   }
 
+  function isPrivateIPv4(host) {
+    if (!/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) return false;
+    const [a, b] = host.split(".").map((v) => Number(v));
+    if (a === 10) return true;
+    if (a === 127) return true;
+    if (a === 192 && b === 168) return true;
+    if (a === 172 && b >= 16 && b <= 31) return true;
+    return false;
+  }
+
+  function shouldTryLanFallback(baseUrl) {
+    if (!location.protocol.startsWith("http")) return false;
+    const host = (location.hostname || "").toLowerCase();
+    const isLocalHost = host === "localhost" || host === "0.0.0.0" || isPrivateIPv4(host);
+    if (!isLocalHost) return false;
+    const port = location.port || "";
+    if (!port) return false;
+    if (["80", "443", "8000"].includes(port)) return false;
+    const normalized = normalizeApiBase(baseUrl);
+    return normalized !== `${location.protocol}//${host}:8000/api`;
+  }
+
+  function shouldUseStoredApi(baseUrl) {
+    const normalized = normalizeApiBase(baseUrl);
+    if (!normalized) return false;
+    try {
+      const parsed = new URL(normalized);
+      const currentHost = (location.hostname || "").toLowerCase();
+      const currentIsLocal = currentHost === "localhost" || currentHost === "0.0.0.0" || isPrivateIPv4(currentHost);
+      const storedHost = (parsed.hostname || "").toLowerCase();
+      const storedIsLocal = storedHost === "localhost" || storedHost === "0.0.0.0" || isPrivateIPv4(storedHost);
+
+      // Evita mixed-content: frontend en HTTPS no puede llamar API HTTP.
+      if (location.protocol === "https:" && parsed.protocol !== "https:") return false;
+      // Evita cargar una API privada/LAN cuando el frontend corre en un dominio publico.
+      if (!currentIsLocal && storedIsLocal) return false;
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   function apiBase() {
     const fromQuery = normalizeApiBase(new URLSearchParams(location.search).get("api"));
     if (fromQuery) {
@@ -55,8 +97,13 @@
       return fromQuery;
     }
 
-    const fromStorage = normalizeApiBase(localStorage.getItem(KEY.api));
-    if (fromStorage) return fromStorage.replace(/\/+$/, "");
+    const storedRaw = localStorage.getItem(KEY.api);
+    if (shouldUseStoredApi(storedRaw)) {
+      const fromStorage = normalizeApiBase(storedRaw);
+      if (fromStorage) return fromStorage.replace(/\/+$/, "");
+    } else if (storedRaw) {
+      localStorage.removeItem(KEY.api);
+    }
 
     const fromWindow = normalizeApiBase(window.NOAH_API_BASE_URL || window.__NOAH_API_BASE_URL);
     if (fromWindow) return fromWindow;
@@ -133,14 +180,16 @@
     const isHtml404 = res.status === 404 && ct.includes("text/html");
 
     // Fallback LAN: cuando /api responde HTML 404 desde servidor estatico.
-    if (isHtml404 && location.protocol.startsWith("http")) {
+    if (isHtml404 && shouldTryLanFallback(primaryBase)) {
       const lanBase = `${location.protocol}//${location.hostname}:8000/api`;
-      if (lanBase !== primaryBase) {
+      try {
         const retry = await doFetch(lanBase);
         if (retry.ok || retry.status !== 404) {
           res = retry;
           localStorage.setItem(KEY.api, lanBase);
         }
+      } catch {
+        // Si el fallback tambien falla por red, conservamos el error original.
       }
     }
 
